@@ -7,7 +7,6 @@ type Product = {
   price: number;
 };
 
-// fake database
 let products: Product[] = [
   { id: "1", name: "product1", price: 1 },
   { id: "2", name: "product2", price: 2 },
@@ -18,11 +17,11 @@ const PORT = 8080;
 
 const server: Server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
-    // show req and res
-    // console.log(req, "request");
+
+
     if (req.method === "GET" && req.url === "/") {
       res.writeHead(200, { "Content-Type": "text/plain" });
-      // without end => end
+
       res.end("Hello, World!\n");
     }
 
@@ -33,7 +32,7 @@ const server: Server = http.createServer(
     }
 
     if (req.method === "POST" && req.url === "/api/v1/products") {
-      // send data to nodejs - stream - small part => collect then use
+
       let body = "";
       req.on("data", (chunk) => {
         console.log(chunk, "ch");
@@ -58,11 +57,6 @@ const server: Server = http.createServer(
       console.log(products, "after delete");
       res.writeHead(204, { "Content-Type": "application/json" });
       res.end();
-      // if status 204 => no content
-      //res.end(JSON.stringify({ message: "product delete successfully" }));
-
-      // try delete then get
-      //  then restart the server
     }
 
     if (

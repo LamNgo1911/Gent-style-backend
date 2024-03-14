@@ -1,0 +1,295 @@
+openapi: 3.0.0
+info:
+  description: An e-commerce website
+  version: "1.0.0"
+  title: E-commerce website
+  contact:
+    email: andrea@gmail.com
+  license:
+    name: Apache 2.0
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - description: SwaggerHub API
+    url: HTTP
+  - description: SwaggerHub Secure API
+    url: HTTPS
+paths:
+  /product:
+    get:
+      summary: get list of products
+      description: get list of products
+      responses:
+        "200":
+          description: got products successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    post:
+      summary: create a new product
+      description: create a new product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        "201":
+          description: product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /product/{id}:
+    delete:
+      summary: delete product
+      description: delete product
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: product deleted successfully
+    put:
+      summary: udpate product
+      description: udpate product
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: product updated successfully
+  /images:
+    get:
+      summary: get images
+      description: get images
+      responses:
+        "200":
+          description: got image successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Images"
+    post:
+      summary: add an image
+      description: add an image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Images"
+      responses:
+        "201":
+          description: image added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Images"
+  /images/{id}:
+    delete:
+      summary: delete image
+      description: delete image
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: image deleted successfully
+  # Andrei above
+
+  # Lam-Ngo
+  /orders: 
+    get:
+      summary: get list of orders
+      description: get list of orders
+      responses:
+        "200":
+          description: Got orders successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+    post:
+      summary: create a new order
+      description: create a new order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/{id}:
+    delete:
+      summary: delete order
+      description: delete order
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Order deleted successfully
+    put:
+      summary: udpate order
+      description: udpate order
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "204":
+          description: Order updated successfully
+  # Lam-Ngo above
+
+  # Category methods || muzahid
+  /category:
+    get:
+      summary: get list of category
+      description: get list of category
+      responses:
+        "200":
+          description: Category List Found Successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    post:
+      summary: Create a new Category
+      description: Create a new Category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Category"
+      responses:
+        "201":
+          description: Category Created Successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+  /category/{id}:
+    delete:
+      summary: Delete Category
+      description: Delete Category
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Category Deleted Successfully
+    put:
+      summary: Udpate Category
+      description: Udpate Category
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category Updated Successfully
+  # Category methods || muzahid
+
+  # Andrei
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123"
+        category:
+          type: string
+          example: "Clothes"
+        title:
+          type: string
+          example: "product1"
+        price:
+          type: integer
+          example: 1
+        image:
+          type: string
+          example: "url.png"
+    Images:
+      type: string
+
+    # Andrei above
+    
+    # Lam-Ngo
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123"
+        Quantity:
+          type: integer
+          example: 3
+        priceSum:
+          type: number
+          example: 1
+        orderItems:
+          type: array
+          items:  
+            $ref: "#/components/schemas/Product"
+    # Lam-Ngo above
+
+    # Category methods || muzahid
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: "123"
+        name:
+          type: string
+          example: "Clothes"
+        image:
+          type: string
+          example: "category-1.png"
+        creationAt:
+          type: string
+          format: date-time
+          example: "2024-03-13T14:52:42.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-13T14:52:42.000Z"
+    # Category methods || muzahid
