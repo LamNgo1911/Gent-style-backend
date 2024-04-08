@@ -1,16 +1,18 @@
 import { Types } from "mongoose";
 
-export enum Size {
-  Small = "Small",
-  Medium = "Medium",
-  Large = "Large",
-}
-
+// --------- Category ---------
 export type Category = {
   id: string;
   name: string;
   image: string;
 };
+
+// --------- Product ---------
+export enum Size {
+  SMALL = "SMALL",
+  MEDIUM = "MEDIUM",
+  LARGE = "LARGE",
+}
 
 export type Product = {
   id: string;
@@ -22,6 +24,7 @@ export type Product = {
   size: Size;
 };
 
+// --------- Order ---------
 export type OrderItem = {
   quantity: number;
   productId: Types.ObjectId;
@@ -35,33 +38,31 @@ export type Order = {
   orderItems: OrderItem[];
 };
 
+// --------- User ---------
 export enum Role {
   ADMIN = "ADMIN",
-  CUSTOMER = "CUSTOMER",
+  USER = "USER",
 }
 export enum UserStatus {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
+  DISABLED = "DISABLED",
 }
-
 
 export type UserToRegister = {
   username: string;
   password: string;
-  firstName: string;
-  lastName: string;
   email: string;
 };
 
 export type User = UserToRegister & {
-  status:UserStatus;
   role: Role;
-  resetToken?: string | null;
-  resetTokenExpiresAt?: Date | null;
+  status: UserStatus;
+  resetToken: string | null;
+  resetTokenExpiresAt: Date | null;
   orders: Order[];
 };
 
-
+// --------- Passport ---------
 export type Payload = {
   email: string;
   _id: string;
@@ -71,4 +72,3 @@ export type loginPayload = {
   email: string;
   password: string;
 };
-

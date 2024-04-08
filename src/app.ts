@@ -8,16 +8,12 @@ import usersRouter from "./routers/usersRouter";
 import categoryRouter from "./routers/categoryRouter";
 import orderRouter from "./routers/orderRouter";
 import errorHandler from "./middlewares/errorHandler";
-import {
-  googleAuthStrategy,
-  jwtStrategy,
-} from "./config/passport";
-
+import { googleAuthStrategy, jwtStrategy } from "./config/passport";
 
 dotenv.config({ path: ".env" });
 
 const app = express();
-app.use(cors())
+app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
 passport.use(jwtStrategy);
@@ -27,7 +23,7 @@ dotenv.config({ path: ".env" });
 app.use("/api/v1/products", productsRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/orders", orderRouter);
-app.use("/api/v1/users", usersRouter);
+app.use("/api/v1", usersRouter);
 
 app.use(errorHandler);
 
