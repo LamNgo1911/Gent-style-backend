@@ -5,7 +5,7 @@ import User, { UserDocument } from "../models/User";
 import {
   BadRequestError,
   NotFoundError,
-  conflictError,
+  ConflictError,
 } from "../errors/ApiError";
 import { UserStatus } from "../misc/types";
 
@@ -18,7 +18,7 @@ const createUser = async (
   const isEmailAlreadyAdded = await User.findOne({ email });
 
   if (isEmailAlreadyAdded) {
-    throw new conflictError("Email already exists");
+    throw new ConflictError("Email already exists");
   }
 
   return await user.save();
@@ -27,12 +27,12 @@ const createUser = async (
 // Todo: Get a user by email
 const getUserByEmail = async (email: string): Promise<UserDocument> => {
   if (!email) {
-    throw new BadRequestError(`Please input data properly`);
+    throw new BadRequestError(`Please enter your email!`);
   }
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new NotFoundError(`User Not Found with ${email}`);
+    throw new NotFoundError(`Invalid credentials!`);
   }
 
   return user;

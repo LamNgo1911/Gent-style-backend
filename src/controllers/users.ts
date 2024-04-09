@@ -14,7 +14,7 @@ import {
   InternalServerError,
   NotFoundError,
   UnauthorizedError,
-  conflictError,
+  ConflictError,
 } from "../errors/ApiError";
 import { baseUrl } from "../api/baseUrl";
 import { loginPayload, UserStatus, UserToRegister } from "../misc/types";
@@ -46,17 +46,7 @@ export async function createUser(
 
     response.status(201).json({ user: newUser });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({ message: error.message });
-    } else if (error instanceof conflictError) {
-      response.status(409).json({ message: error.message });
-    } else if (error instanceof mongoose.Error.ValidationError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -107,25 +97,7 @@ export async function loginUser(
       .status(200)
       .json({ token: token, refreshToken: refreshToken, user });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else if (error instanceof UnauthorizedError) {
-      response.status(401).json({
-        message: error.message,
-      });
-    } else if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else if (error instanceof ForbiddenError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -156,17 +128,7 @@ export async function forgotPassword(
       .status(200)
       .json({ message: "Verification email sent successfully." });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Failed to send verification email."));
-    }
+    next(error);
   }
 }
 
@@ -200,21 +162,7 @@ export async function resetPassword(
       .status(200)
       .json({ user: newUserData, message: "Password reset successful." });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else if (error instanceof mongoose.Error.ValidationError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -258,7 +206,7 @@ export async function getAllUser(
 
     response.status(200).json({ users, pagination: { count, pageCount } });
   } catch (error) {
-    next(new InternalServerError("Internal Server Error"));
+    next(error);
   }
 }
 
@@ -275,21 +223,7 @@ export async function getSingleUser(
 
     response.status(200).json({ user });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else if (error instanceof mongoose.Error.CastError) {
-      response.status(404).json({
-        message: "Wrong format id",
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -311,17 +245,7 @@ export async function updateUser(
 
     response.status(200).json(updateUser);
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({ message: error.message });
-    } else if (error instanceof NotFoundError) {
-      response.status(404).json({ message: error.message });
-    } else if (error instanceof mongoose.Error.CastError) {
-      response.status(404).json({
-        message: "Wrong format id",
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -354,25 +278,7 @@ export async function updatePassword(
 
     response.status(200).send({ user, message: "User updated!" });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else if (error instanceof mongoose.Error.CastError) {
-      response.status(404).json({
-        message: "Wrong format id",
-      });
-    } else if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else if (error instanceof mongoose.Error.ValidationError) {
-      response.status(404).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -388,21 +294,7 @@ export async function deleteUser(
 
     response.status(200).json({ user, message: "User has been deleted" });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      response.status(404).json({
-        message: "User not found",
-      });
-    } else if (error instanceof mongoose.Error.CastError) {
-      response.status(404).json({
-        message: "Wrong format id",
-      });
-    } else if (error instanceof BadRequestError) {
-      response.status(400).json({
-        message: error.message,
-      });
-    } else {
-      next(new InternalServerError("Internal Server Error"));
-    }
+    next(error);
   }
 }
 
@@ -574,16 +466,6 @@ export async function updateUserStatus(
 
     response.status(200).json({ user });
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      response.status(400).json({ message: error.message });
-    } else if (error instanceof NotFoundError) {
-      response.status(404).json({ message: error.message });
-    } else if (error instanceof mongoose.Error.CastError) {
-      response.status(400).json({
-        message: "Wrong id format",
-      });
-    } else {
-      next(new InternalServerError("Internal server error"));
-    }
+    next(error);
   }
 }

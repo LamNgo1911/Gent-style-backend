@@ -28,8 +28,8 @@ export class NotFoundError extends ApiError {
   }
 }
 
-export class conflictError extends ApiError {
-  constructor(readonly message: string = "Not found") {
+export class ConflictError extends ApiError {
+  constructor(readonly message: string = "Duplicate field value entered") {
     super(409, message);
   }
 }
