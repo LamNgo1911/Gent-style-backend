@@ -1,4 +1,5 @@
 import express from "express";
+import passport from "passport";
 
 import {
   getAllUser,
@@ -17,15 +18,21 @@ import {
 } from "../controllers/users";
 
 import adminCheck from "../middlewares/adminCheck";
-import passport from "passport";
 import userStatusCheck from "../middlewares/userStatusCheck";
 
 const router = express.Router();
 
 // ---------- Auth ----------
+// Todo: Create a new user
 router.post("/users/register", createUser);
+
+// Todo: Login a user
 router.post("/users/login", loginUser);
+
+// Todo: Send a verification link to user's email
 router.route("/users/forgot-password").post(forgotPassword);
+
+// Todo: reset user's password
 router.route("/users/reset-password").post(resetPassword);
 
 // router.get(
@@ -51,6 +58,14 @@ router.get(
   getSingleUser
 );
 
+// Todo: Update user password
+router.put(
+  "/users/:id/update-password",
+  passport.authenticate("jwt", { session: false }),
+  userStatusCheck,
+  updatePassword
+);
+
 // Todo: Update a user
 router.put(
   "/users/:id",
@@ -59,19 +74,11 @@ router.put(
   updateUser
 );
 
-// Todo: Update user password
-router.put(
-  "/:id/update-password",
-  passport.authenticate("jwt", { session: false }),
-  updatePassword
-);
-
 // ---------- Admin ----------
 // Todo: Get all users by admin
 router.get(
   "/admin/users",
   passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
   adminCheck,
   getAllUser
 );
@@ -80,7 +87,6 @@ router.get(
 router.get(
   "/admin/users/:id",
   passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
   adminCheck,
   getSingleUser
 );
@@ -97,23 +103,21 @@ router.put(
 router.put(
   "/admin/users/:id",
   passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
   adminCheck,
   updateUser
 );
 
 // Todo: Delete a user by admin
 router.delete(
-  "admin/:id",
+  "/admin/users/:id",
   passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
   adminCheck,
   deleteUser
 );
 
 // Todo: ban or unban a user by admin
 router.post(
-  "admin/changeUserStatus",
+  "/admin/users/change-status",
   passport.authenticate("jwt", { session: false }),
   adminCheck,
   updateUserStatus

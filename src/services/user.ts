@@ -1,13 +1,13 @@
+import nodemailer from "nodemailer";
+import { FilterQuery, UpdateQuery } from "mongoose";
+
 import User, { UserDocument } from "../models/User";
 import {
   BadRequestError,
   NotFoundError,
   conflictError,
 } from "../errors/ApiError";
-
-import bcrypt from "bcrypt";
-import nodemailer from "nodemailer";
-import { FilterQuery } from "mongoose";
+import { UserStatus } from "../misc/types";
 
 // Todo: Create a new user
 const createUser = async (
@@ -18,7 +18,7 @@ const createUser = async (
   const isEmailAlreadyAdded = await User.findOne({ email });
 
   if (isEmailAlreadyAdded) {
-    throw new conflictError("Email already added in our database");
+    throw new conflictError("Email already exists");
   }
 
   return await user.save();
@@ -29,10 +29,10 @@ const getUserByEmail = async (email: string): Promise<UserDocument> => {
   if (!email) {
     throw new BadRequestError(`Please input data properly`);
   }
-  const user = await User.findOne({ email: email });
+  const user = await User.findOne({ email });
 
   if (!user) {
-    throw new NotFoundError(`User Not Found`);
+    throw new NotFoundError(`User Not Found with ${email}`);
   }
 
   return user;
@@ -75,10 +75,11 @@ const getUserByResetToken = async (
   if (!resetToken) {
     throw new BadRequestError(`Please provide resetToken`);
   }
+
   const user = await User.findOne({ resetToken });
 
   if (!user) {
-    throw new NotFoundError(`User Not Found`);
+    throw new NotFoundError(`User Not Found with ${resetToken}`);
   }
 
   return user;
@@ -123,7 +124,8 @@ const getSingleUser = async (id: string): Promise<UserDocument> => {
   if (user) {
     return user;
   }
-  throw new NotFoundError();
+
+  throw new NotFoundError(`User Not Found with ${id}`);
 };
 
 // Todo: Update a user
@@ -136,7 +138,7 @@ const updateUser = async (id: string, updateData: Partial<UserDocument>) => {
   const updateUser = await User.findByIdAndUpdate(id, updateData, options);
 
   if (!updateUser) {
-    throw new NotFoundError("User Not Found");
+    throw new NotFoundError(`User Not Found with ${id}`);
   }
 
   return updateUser;
@@ -154,7 +156,7 @@ const deleteUser = async (id: string) => {
   if (user) {
     return user;
   }
-  throw new NotFoundError("User Not Found");
+  throw new NotFoundError(`User Not Found with ${id}`);
 };
 
 // const assingAdmin = async (id: string, updateRole: Partial<UserDocument>) => {
@@ -189,17 +191,17 @@ const deleteUser = async (id: string) => {
 // Todo: ban or unban a user by admin
 const updateUserStatus = async (
   userId: string,
-  status: Partial<UserDocument>
+  status: UpdateQuery<Partial<UserDocument>>
 ) => {
   if (!userId || !status) {
     throw new BadRequestError("Please provide userId and status!");
   }
 
   const options = { new: true, runValidators: true };
-  const user = await User.findByIdAndUpdate(userId, status, options);
+  const user = await User.findByIdAndUpdate(userId, { status }, options);
 
   if (!user) {
-    throw new NotFoundError("User not found");
+    throw new NotFoundError(`User Not Found with ${userId}`);
   }
   return user;
 };

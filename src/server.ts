@@ -6,7 +6,7 @@ const port = process.env.PORT as string;
 
 mongoose
   .connect(baseUrl, {
-    dbName: "store"
+    dbName: "full-stack",
   })
   .then(() => {
     console.log("Connected to MongoDB");
@@ -15,6 +15,7 @@ mongoose
     });
   })
   .catch((error: Error) => {
-    console.error("MongDB connection error:", error);
+    console.log("MongDB connection error:", error);
+
     process.exit(1);
   });

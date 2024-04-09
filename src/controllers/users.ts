@@ -4,18 +4,20 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import { v4 as uuid } from "uuid";
+import dotenv from "dotenv";
 
 import userService from "../services/user";
 import User, { UserDocument } from "../models/User";
 import {
   BadRequestError,
+  ForbiddenError,
   InternalServerError,
   NotFoundError,
   UnauthorizedError,
   conflictError,
 } from "../errors/ApiError";
 import { baseUrl } from "../api/baseUrl";
-import { loginPayload, UserToRegister } from "../misc/types";
+import { loginPayload, UserStatus, UserToRegister } from "../misc/types";
 
 // Todo: Create a new user
 export async function createUser(
@@ -45,9 +47,13 @@ export async function createUser(
     response.status(201).json({ user: newUser });
   } catch (error) {
     if (error instanceof BadRequestError) {
-      response.status(400).json({ error: error.message });
+      response.status(400).json({ message: error.message });
     } else if (error instanceof conflictError) {
-      response.status(409).json({ error: error.message });
+      response.status(409).json({ message: error.message });
+    } else if (error instanceof mongoose.Error.ValidationError) {
+      response.status(404).json({
+        message: error.message,
+      });
     } else {
       next(new InternalServerError("Internal Server Error"));
     }
@@ -61,6 +67,7 @@ export async function loginUser(
   next: NextFunction
 ) {
   try {
+    dotenv.config({ path: ".env" });
     const { email, password } = request.body;
 
     if (!email || !password) {
@@ -77,7 +84,13 @@ export async function loginUser(
     const isPasswordCorrect = await bcrypt.compare(password, hashedPassword);
 
     if (!isPasswordCorrect) {
-      throw new BadRequestError("Wrong password!");
+      throw new BadRequestError("Invalid credentials!");
+    }
+
+    if (user.status === UserStatus.DISABLED) {
+      throw new ForbiddenError(
+        "Account banned. Contact support for assistance."
+      );
     }
 
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
@@ -103,6 +116,10 @@ export async function loginUser(
         message: error.message,
       });
     } else if (error instanceof NotFoundError) {
+      response.status(404).json({
+        message: error.message,
+      });
+    } else if (error instanceof ForbiddenError) {
       response.status(404).json({
         message: error.message,
       });
@@ -132,6 +149,7 @@ export async function forgotPassword(
 
     user.resetToken = resetToken;
     user.resetTokenExpiresAt = new Date(Date.now() + 3600000);
+
     await user.save();
 
     response
@@ -190,6 +208,10 @@ export async function resetPassword(
       response.status(404).json({
         message: error.message,
       });
+    } else if (error instanceof mongoose.Error.ValidationError) {
+      response.status(404).json({
+        message: error.message,
+      });
     } else {
       next(new InternalServerError("Internal Server Error"));
     }
@@ -213,15 +235,15 @@ export async function getAllUser(
     const limit = Number(request.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const query: FilterQuery<UserDocument> = { role: "user" };
+    const query: FilterQuery<UserDocument> = {};
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
 
     if (filter === "Active") {
-      query.status = true;
+      query.status = UserStatus.ACTIVE;
     } else if (filter === "Disabled") {
-      query.status = false;
+      query.status = UserStatus.DISABLED;
     }
 
     const count = await User.countDocuments(query);
@@ -251,11 +273,11 @@ export async function getSingleUser(
 
     const user = await userService.getSingleUser(id);
 
-    response.status(201).json({ user });
+    response.status(200).json({ user });
   } catch (error) {
     if (error instanceof NotFoundError) {
       response.status(404).json({
-        message: "User not found",
+        message: error.message,
       });
     } else if (error instanceof BadRequestError) {
       response.status(400).json({
@@ -281,14 +303,18 @@ export async function updateUser(
     const id = request.params.id;
     const { username, email } = request.body;
 
+    if (!validator.isEmail(email)) {
+      throw new BadRequestError("Please enter a valid email!");
+    }
+
     const updateUser = await userService.updateUser(id, { username, email });
 
     response.status(200).json(updateUser);
   } catch (error) {
     if (error instanceof BadRequestError) {
-      response.status(400).json({ error: error.message });
+      response.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
-      response.status(404).json({ error: error.message });
+      response.status(404).json({ message: error.message });
     } else if (error instanceof mongoose.Error.CastError) {
       response.status(404).json({
         message: "Wrong format id",
@@ -330,7 +356,7 @@ export async function updatePassword(
   } catch (error) {
     if (error instanceof NotFoundError) {
       response.status(404).json({
-        message: "User not found",
+        message: error.message,
       });
     } else if (error instanceof mongoose.Error.CastError) {
       response.status(404).json({
@@ -338,6 +364,10 @@ export async function updatePassword(
       });
     } else if (error instanceof BadRequestError) {
       response.status(400).json({
+        message: error.message,
+      });
+    } else if (error instanceof mongoose.Error.ValidationError) {
+      response.status(404).json({
         message: error.message,
       });
     } else {
@@ -538,22 +568,19 @@ export async function updateUserStatus(
   response: Response,
   next: NextFunction
 ) {
-  const { userId, userStatus } = request.body;
-
   try {
-    const updatedUserStatus = await userService.updateUserStatus(userId, {
-      status: userStatus,
-    });
+    const { userId, status } = request.body;
+    const user = await userService.updateUserStatus(userId, status);
 
-    response.status(200).json({ user: updatedUserStatus });
+    response.status(200).json({ user });
   } catch (error) {
     if (error instanceof BadRequestError) {
-      response.status(400).json({ error: "Invalid request" });
+      response.status(400).json({ message: error.message });
     } else if (error instanceof NotFoundError) {
-      response.status(404).json({ error: "User not found" });
+      response.status(404).json({ message: error.message });
     } else if (error instanceof mongoose.Error.CastError) {
       response.status(400).json({
-        message: "Wrong id",
+        message: "Wrong id format",
       });
     } else {
       next(new InternalServerError("Internal server error"));

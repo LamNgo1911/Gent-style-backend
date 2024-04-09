@@ -1,7 +1,7 @@
-import mongoose, { Document, Model } from "mongoose";
+import mongoose, { Document } from "mongoose";
+import bcrypt from "bcrypt";
 
 import { Role, User, UserStatus } from "../misc/types";
-import bcrypt from "bcrypt";
 
 const Schema = mongoose.Schema;
 
@@ -47,6 +47,8 @@ const UserSchema = new Schema({
     },
   ],
 });
+
+UserSchema.index({ resetToken: 1 }, { unique: true });
 
 // Todo: This middleware will hash password before saving user into database
 UserSchema.pre("save", async function (next) {
