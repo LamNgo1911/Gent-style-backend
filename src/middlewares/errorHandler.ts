@@ -1,4 +1,6 @@
 import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
+
 import {
   BadRequestError,
   ConflictError,
@@ -6,7 +8,6 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "../errors/ApiError";
-import mongoose from "mongoose";
 
 function apiErrorhandler(
   error: Error,
@@ -21,7 +22,9 @@ function apiErrorhandler(
   } else if (error instanceof mongoose.Error.ValidationError) {
     response.status(404).json({ message: error.message });
   } else if (error instanceof mongoose.Error.CastError) {
-    response.status(404).json({ message: error.message });
+    response
+      .status(404)
+      .json({ message: `Resource not found with id of ${error.value}` });
   } else if (error instanceof UnauthorizedError) {
     response.status(401).json({ message: error.message });
   } else if (error instanceof NotFoundError) {

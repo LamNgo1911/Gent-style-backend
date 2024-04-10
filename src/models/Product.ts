@@ -1,11 +1,10 @@
-import mongoose, { Document, Model } from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 import { Product, Size } from "../misc/types";
 
 const Schema = mongoose.Schema;
 
-export type ProductDocument = Document &
-  Product & { matchPassword(enterPassword: string): Promise<boolean> };
+export type ProductDocument = Document & Product;
 
 const ProductSchema = new Schema({
   name: {
@@ -30,11 +29,26 @@ const ProductSchema = new Schema({
     type: String,
     required: true,
   },
-  size: {
-    type: String,
-    enum: [Size.SMALL, Size.MEDIUM, Size.LARGE],
-    required: true,
-  },
+  variants: [
+    {
+      color: {
+        type: String,
+        required: true,
+        default: "NONE",
+      },
+      size: {
+        type: String,
+        enum: Object.values(Size),
+        required: true,
+        default: Size.NONE,
+      },
+      stock: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+    },
+  ],
 });
 
 ProductSchema.index({ name: "text" });

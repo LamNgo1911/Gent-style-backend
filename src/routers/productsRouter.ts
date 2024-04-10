@@ -1,4 +1,6 @@
 import express from "express";
+import passport from "passport";
+
 import {
   getAllProducts,
   createProduct,
@@ -7,13 +9,12 @@ import {
   updateProduct,
 } from "../controllers/products";
 import adminCheck from "../middlewares/adminCheck";
-import passport from "passport";
 import userStatusCheck from "../middlewares/userStatusCheck";
 
 const router = express.Router();
 
-router.get("/",getAllProducts);
-router.get("/:id",getOneProduct);
+router.get("/", getAllProducts);
+router.get("/:id", getOneProduct);
 router.post(
   "/",
   passport.authenticate("jwt", { session: false }),
