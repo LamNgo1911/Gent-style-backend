@@ -2,12 +2,7 @@ import nodemailer from "nodemailer";
 import { FilterQuery, UpdateQuery } from "mongoose";
 
 import User, { UserDocument } from "../models/User";
-import {
-  BadRequestError,
-  NotFoundError,
-  ConflictError,
-} from "../errors/ApiError";
-import { UserStatus } from "../misc/types";
+import { NotFoundError, ConflictError } from "../errors/ApiError";
 
 // Todo: Create a new user
 const createUser = async (
@@ -18,7 +13,7 @@ const createUser = async (
   const isEmailAlreadyAdded = await User.findOne({ email });
 
   if (isEmailAlreadyAdded) {
-    throw new ConflictError("Email already exists");
+    throw new ConflictError("Email already exists.");
   }
 
   return await user.save();
@@ -26,9 +21,6 @@ const createUser = async (
 
 // Todo: Get a user by email
 const getUserByEmail = async (email: string): Promise<UserDocument> => {
-  if (!email) {
-    throw new BadRequestError(`Please enter your email!`);
-  }
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -43,10 +35,6 @@ const sendVerificationEmail = async (
   email: string,
   verificationLink: string
 ): Promise<any> => {
-  if (!email) {
-    throw new BadRequestError("Please provide your email");
-  }
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
     host: "smtp.gmail.com",
@@ -72,10 +60,6 @@ const sendVerificationEmail = async (
 const getUserByResetToken = async (
   resetToken: string
 ): Promise<UserDocument> => {
-  if (!resetToken) {
-    throw new BadRequestError(`Please provide resetToken`);
-  }
-
   const user = await User.findOne({ resetToken });
 
   if (!user) {
@@ -100,7 +84,7 @@ const updatePassword = async (
 };
 
 // Todo: Get all users
-const getAllUser = async function getUsers(
+const getAllUsers = async function getUsers(
   query: FilterQuery<UserDocument>,
   sort: string,
   skip: number,
@@ -116,24 +100,17 @@ const getAllUser = async function getUsers(
 
 // Todo: Get a single user
 const getSingleUser = async (id: string): Promise<UserDocument> => {
-  if (!id) {
-    throw new BadRequestError("Please provide userId!");
-  }
   const user = await User.findById(id);
 
-  if (user) {
-    return user;
+  if (!user) {
+    throw new NotFoundError(`User Not Found with ${id}`);
   }
 
-  throw new NotFoundError(`User Not Found with ${id}`);
+  return user;
 };
 
 // Todo: Update a user
 const updateUser = async (id: string, updateData: Partial<UserDocument>) => {
-  if (!id) {
-    throw new BadRequestError("Please provide userId!");
-  }
-
   const options = { new: true, runValidators: true };
   const updateUser = await User.findByIdAndUpdate(id, updateData, options);
 
@@ -146,68 +123,33 @@ const updateUser = async (id: string, updateData: Partial<UserDocument>) => {
 
 // Todo: Delete a user by admin
 const deleteUser = async (id: string) => {
-  if (!id) {
-    throw new BadRequestError("Please provide userId!");
-  }
-
   const options = { new: true, runValidators: true };
   const user = await User.findByIdAndDelete(id, options);
 
-  if (user) {
-    return user;
+  if (!user) {
+    throw new NotFoundError(`User Not Found with ${id}`);
   }
-  throw new NotFoundError(`User Not Found with ${id}`);
+
+  return user;
 };
-
-// const assingAdmin = async (id: string, updateRole: Partial<UserDocument>) => {
-//   if (!id) {
-//     throw new BadRequestError();
-//   }
-
-//   const options = { new: true, runValidators: true };
-//   const updateUser = await User.findByIdAndUpdate(id, updateRole, options);
-
-//   if (!updateUser) {
-//     throw new BadRequestError();
-//   }
-
-//   return updateUser;
-// };
-
-// const removeAdmin = async (id: string, updateRole: Partial<UserDocument>) => {
-//   if (!id) {
-//     throw new BadRequestError();
-//   }
-
-//   const options = { new: true, runValidators: true };
-//   const updateUser = await User.findByIdAndUpdate(id, updateRole, options);
-
-//   if (!updateUser) {
-//     throw new BadRequestError();
-//   }
-//   return updateUser;
-// };
 
 // Todo: ban or unban a user by admin
 const updateUserStatus = async (
   userId: string,
   status: UpdateQuery<Partial<UserDocument>>
 ) => {
-  if (!userId || !status) {
-    throw new BadRequestError("Please provide userId and status!");
-  }
-
   const options = { new: true, runValidators: true };
   const user = await User.findByIdAndUpdate(userId, { status }, options);
 
   if (!user) {
     throw new NotFoundError(`User Not Found with ${userId}`);
   }
+
   return user;
 };
 
 export default {
-  getAllUser,
+  getAllUsers,
   getSingleUser,
   createUser,
   updateUser,

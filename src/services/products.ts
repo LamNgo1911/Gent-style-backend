@@ -1,66 +1,78 @@
 import { FilterQuery } from "mongoose";
 
-import { BadRequestError, NotFoundError } from "../errors/ApiError"
-import Product, { ProductDocument } from "../models/Product"
+import { BadRequestError, NotFoundError } from "../errors/ApiError";
+import Product, { ProductDocument } from "../models/Product";
 
-const getAllProducts = async(limit: number, offset: number, searchQuery: string = "", minPrice?: number, maxPrice?: number): Promise<ProductDocument[]> => {
-   const query: FilterQuery<ProductDocument> = {};
+// Todo: Get all products
+const getAllProducts = async (
+  query: FilterQuery<ProductDocument>,
+  skip: number,
+  limit: number
+): Promise<[ProductDocument[], number]> => {
+  const products = await Product.find(query)
+    .skip(skip)
+    .limit(limit)
+    .populate("category");
 
-   if (minPrice !== undefined && maxPrice !== undefined) {
-      query.price = { $gte: minPrice, $lte: maxPrice };
-   }
+  const count = await Product.countDocuments(query);
 
-   if (searchQuery) {
-      query.name = { $regex: new RegExp(searchQuery, 'i') };
-   }
-   
-   return await Product
-      .find(query)
-      .sort( { price: 1 })
-      .populate( "category", {name: 1, image: 1} )
-      .limit(limit)
-      .skip(offset)
-}
+  return [products, count];
+};
 
-const getOneProduct = async(id: string): Promise<ProductDocument | undefined> => {
-   const product = await Product.findById(id).populate("category")
-   if(product) {
-      return product;
-   }
-   throw new NotFoundError();
-}
+// Todo: Get a single product
+const getSingleProduct = async (
+  id: string
+): Promise<ProductDocument | undefined> => {
+  const product = await Product.findById(id).populate("category");
 
-const createProduct = async (product: ProductDocument): Promise<ProductDocument> => {
-      const { name, price, description, category, image, size } = product;
-      if (!name || !price || !description || !category || !image || !size) {
-         throw new BadRequestError();
-      }
+  if (!product) {
+    throw new NotFoundError(`Product Not Found wit product id ${id}.`);
+  }
 
-      return await product.save();
-}
+  return product;
+};
 
-const updateProduct = async(id: string, changedProduct: Partial<ProductDocument>) => {
-   if(!id) {
-      throw new BadRequestError();
-   }
+// Todo: Create a new product
+const createProduct = async (
+  product: ProductDocument
+): Promise<ProductDocument> => {
+  return await product.save();
+};
 
-   const options = { new: true, runValidators: true };
-   const updatedProduct = await Product.findByIdAndUpdate(id, changedProduct, options);
+// Todo: Update a product
+const updateProduct = async (
+  id: string,
+  changedProduct: Partial<ProductDocument>
+) => {
+  const options = { new: true, runValidators: true };
 
-   if(!updatedProduct) {
-      throw new BadRequestError();
-   }
+  const updatedProduct = await Product.findByIdAndUpdate(
+    id,
+    changedProduct,
+    options
+  );
 
-   return updatedProduct;
-}
+  if (!updatedProduct) {
+    throw new BadRequestError(`Product Not Found wit product id ${id}.`);
+  }
 
-const deleteProduct = async(id: string) => {
-   const product = await Product.findByIdAndDelete(id)
-   if(product) {
-      return product;
-   }
-   throw new NotFoundError();
-}
+  return updatedProduct;
+};
 
+// Todo: Delete a product
+const deleteProduct = async (id: string) => {
+  const product = await Product.findByIdAndDelete(id);
+  if (!product) {
+    throw new BadRequestError(`Product Not Found wit product id ${id}.`);
+  }
 
-export default { getAllProducts, getOneProduct, createProduct, updateProduct, deleteProduct }
+  return product;
+};
+
+export default {
+  getAllProducts,
+  getSingleProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+};

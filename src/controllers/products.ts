@@ -1,134 +1,195 @@
-import express, { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
+import { Request, Response, NextFunction } from "express";
+import { FilterQuery } from "mongoose";
 
 import Product from "../models/Product";
 import productsService from "../services/products";
 import { ProductDocument } from "../models/Product";
-import {
-    BadRequestError,
-    InternalServerError,
-    NotFoundError,
-} from "../errors/ApiError";
+import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
+import { SortOptions } from "../misc/types";
 
+// Todo: Get all products
 export async function getAllProducts(
-    request: Request,
-    response: Response,
-    next: NextFunction
+  request: Request,
+  response: Response,
+  next: NextFunction
 ) {
-    try {
-        const {
-            limit = 10,
-            offset = 0,
-            searchQuery = "",
-            minPrice = 0,
-            maxPrice = Infinity,
-        } = request.query;
+  try {
+    const page = Number(request.query?.page) || 1;
+    const limit = Number(request.query?.limit) || 8;
+    const {
+      sort,
+      category,
+      priceOption,
+      lowestPrice,
+      highestPrice,
+      size,
+      color,
+      search,
+    } = request.query;
 
-        const productList = await productsService.getAllProducts(
-            Number(limit),
-            Number(offset),
-            searchQuery as string,
-            !isNaN(Number(minPrice)) ? Number(minPrice) : 0,
-            !isNaN(Number(maxPrice)) ? Number(maxPrice) : Infinity
-        );
+    const skip = (page - 1) * limit;
+    const query: FilterQuery<ProductDocument> = {};
 
-        const count = productList.length;
-        response.status(200).json({ totalCount: count, products: productList });
-    } catch (error) {
-        next(new InternalServerError("Internal error"));
+    // Sort
+    const sortOptions: SortOptions = {
+      "Latest added": { createdAt: -1 },
+      "Most relevant": { createdAt: -1 },
+      "Lowest price": { price: 1 },
+      "Highest price": { price: -1 },
+      "Top reviews": { averageRating: -1 },
+    };
+
+    if (sort && sortOptions[sort as keyof SortOptions]) {
+      query.sort = sortOptions[sort as keyof SortOptions];
     }
+
+    // Filter by category
+    if (category && category !== "All category" && category !== "All") {
+      const cate = await Category.findOne({ name: category });
+      if (cate) {
+        query.category = cate._id;
+      }
+    }
+
+    // Filter by price
+    if (priceOption === "Custom") {
+      if (lowestPrice && highestPrice) {
+        query.price = { $gte: lowestPrice, $lte: highestPrice };
+      } else if (lowestPrice) {
+        query.price = { $gte: lowestPrice };
+      } else if (highestPrice) {
+        query.price = { $lte: highestPrice };
+      }
+    }
+
+    // Filter by size
+    query.sizes = size
+      ? Array.isArray(size)
+        ? size.map((s) => String(s).toLowerCase())
+        : String(size).toLowerCase()
+      : undefined;
+
+    // Filter by color
+    query.colors = color ? color : undefined;
+
+    // Filter by search
+    query.name = search ? { $regex: search, $options: "i" } : undefined;
+
+    const [products, count] = await productsService.getAllProducts(
+      query,
+      skip,
+      limit
+    );
+
+    response.status(200).json({ products, count });
+  } catch (error) {
+    next(error);
+  }
 }
 
-export async function getOneProduct(
-    request: Request,
-    response: Response,
-    next: NextFunction
+// Todo: Get a single product
+export async function getSingleProduct(
+  request: Request,
+  response: Response,
+  next: NextFunction
 ) {
-    try {
-        const product = await productsService.getOneProduct(request.params.id);
-        response.status(201).json(product);
-    } catch (error) {
-        if (error instanceof NotFoundError) {
-            response.status(404).json({
-                message: "Product not found",
-            });
-        } else if (error instanceof mongoose.Error.CastError) {
-            response.status(404).json({
-                message: "Product not found",
-            });
-            return;
-        }
-
-        next(new InternalServerError());
-    }
-}
-
-export async function createProduct(request: Request, response: Response) {
-    try {
-        const { name, price, description, category, image, size } = request.body;
-
-        const categoryDoc = await Category.findOne({ name: category });
-        if (!categoryDoc) {
-            throw new BadRequestError("Category not found");
-        }
-
-        const product = new Product({
-            name,
-            price,
-            description,
-            category: categoryDoc._id,
-            image,
-            size,
-        });
-
-        const newProduct = await productsService.createProduct(product);
-        response.status(201).json(newProduct);
-    } catch (error) {
-        if (error instanceof BadRequestError) {
-            response.status(400).json({ error: error.message });
-        } else {
-            response.status(500).json({ error: "Internal Server Error" });
-        }
-    }
-}
-
-export async function updateProduct(request: Request, response: Response) {
+  try {
     const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide product id!");
+    }
+
+    const product = await productsService.getSingleProduct(id);
+
+    response.status(201).json({ product });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Todo: Create a new product
+export async function createProduct(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  try {
+    const { name, price, description, category, image, variants } =
+      request.body;
+
+    if (!name || !price || !description || !category || !image || !variants) {
+      throw new BadRequestError("Please fill out all fields!");
+    }
+
+    const checkedCategory = await Category.findOne({ name: category });
+
+    if (!checkedCategory) {
+      throw new BadRequestError("Category Not Found");
+    }
+
+    const product = new Product({
+      name,
+      price,
+      description,
+      category,
+      image,
+      variants,
+    });
+
+    const newProduct = await productsService.createProduct(product);
+
+    response.status(201).json({ newProduct });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Todo: Update a product
+export async function updateProduct(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  try {
+    const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide product id!");
+    }
+
     const product: Partial<ProductDocument> = request.body;
 
-    try {
-        const updatedProduct = await productsService.updateProduct(id, product);
-        response.status(200).json(updatedProduct);
-    } catch (error) {
-        if (error instanceof BadRequestError) {
-            response.status(400).json({ error: "Invalid request" });
-        } else if (error instanceof NotFoundError) {
-            response.status(404).json({ error: "Product not found" });
-        } else if (error instanceof mongoose.Error.CastError) {
-            response.status(404).json({
-                message: "Product not found",
-            });
-            return;
-        } else {
-            response.status(500).json({ error: "Internal Server Error" });
-        }
-    }
+    const updatedProduct = await productsService.updateProduct(id, product);
+
+    response
+      .status(200)
+      .json({ message: "Product has been updated", updatedProduct });
+  } catch (error) {
+    next(error);
+  }
 }
 
-export async function deleteProduct(request: Request, response: Response) {
+// Todo: Delete a product
+export async function deleteProduct(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  try {
     const id = request.params.id;
 
-    try {
-        await productsService.deleteProduct(id);
-        response.status(204).json({ message: "Product has been deleted" }).end();
-    } catch (error) {
-        if (error instanceof BadRequestError) {
-            response.status(400).json({ error: "Invalid request" });
-        } else if (error instanceof NotFoundError) {
-            response.status(404).json({ error: "Product not found" });
-        } else {
-            response.status(500).json({ error: "Internal Server Error" });
-        }
+    if (!id) {
+      throw new BadRequestError("Please provide product id!");
     }
+
+    const deletedProduct = await productsService.deleteProduct(id);
+
+    response
+      .status(200)
+      .json({ message: "Product has been deleted", deletedProduct });
+  } catch (error) {
+    next(error);
+  }
 }

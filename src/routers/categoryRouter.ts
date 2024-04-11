@@ -2,10 +2,10 @@ import express from "express";
 import passport from "passport";
 
 import {
-  getAllCategory,
+  getAllCategories,
   createCategory,
   deleteCategory,
-  getOneCategory,
+  getSingleCategory,
   updateCategory,
 } from "../controllers/categories";
 import userStatusCheck from "../middlewares/userStatusCheck";
@@ -16,10 +16,10 @@ const router = express.Router();
 // ------------ User ------------
 
 // Todo: Get all categories
-router.get("/", getAllCategory);
+router.get("/", getAllCategories);
 
 // Todo: Get a single category
-router.get("/:id", getOneCategory);
+router.get("/:id", getSingleCategory);
 
 // ------------ Admin ------------
 

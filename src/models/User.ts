@@ -1,13 +1,17 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
 import bcrypt from "bcrypt";
 
 import { Role, User, UserStatus } from "../misc/types";
 
 const Schema = mongoose.Schema;
 
-export type UserDocument = Document & User;
+type UserDocumentMethods = {
+  matchPassword(enteredPassword: string): Promise<boolean>;
+};
 
-const UserSchema = new Schema({
+export type UserDocument = Document & User & UserDocumentMethods;
+
+const UserSchema = new Schema<UserDocument>({
   username: {
     type: String,
     required: true,
@@ -48,8 +52,6 @@ const UserSchema = new Schema({
   ],
 });
 
-UserSchema.index({ resetToken: 1 }, { unique: true });
-
 // Todo: This middleware will hash password before saving user into database
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return;
@@ -58,12 +60,5 @@ UserSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
-// Todo: compare enter password and hash password
-UserSchema.methods.matchPassword = async function name(
-  enterPassword: string
-): Promise<boolean> {
-  return await bcrypt.compare(enterPassword, this.password);
-};
 
 export default mongoose.model<UserDocument>("User", UserSchema);

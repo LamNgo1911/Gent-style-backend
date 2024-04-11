@@ -1,36 +1,26 @@
-import { BadRequestError, NotFoundError } from "../errors/ApiError";
+import { NotFoundError } from "../errors/ApiError";
 import Category, { CategoryDocument } from "../models/Category";
 
 // Todo: Get all categories
-const getAllCategory = async (): Promise<CategoryDocument[]> => {
+const getAllCategories = async (): Promise<CategoryDocument[]> => {
   return await Category.find();
 };
 
 // Todo: Get a single category
-const getOneCategory = async (id: string): Promise<CategoryDocument> => {
-  if (!id) {
-    throw new BadRequestError("Please provide category id!");
-  }
-
+const getSingleCategory = async (id: string): Promise<CategoryDocument> => {
   const category = await Category.findById(id);
 
-  if (category) {
-    return category;
+  if (!category) {
+    throw new NotFoundError(`Category Not Found with id ${id}.`);
   }
 
-  throw new NotFoundError(`Category Not Found with id ${id}.`);
+  return category;
 };
 
 // Todo: Create a new category by admin
 const createCategory = async (
   category: CategoryDocument
 ): Promise<CategoryDocument> => {
-  const { name, image } = category;
-
-  if (!name || !image) {
-    throw new BadRequestError("Please fill out all the fields!");
-  }
-
   return await category.save();
 };
 
@@ -39,13 +29,6 @@ const updateCategory = async (
   id: string,
   changedCategory: Partial<CategoryDocument>
 ) => {
-  if (!id) {
-    throw new BadRequestError("Please provide category id!");
-  }
-  if (!changedCategory) {
-    throw new BadRequestError("Please provide props to update!");
-  }
-
   const options = { new: true, runValidators: true };
 
   const updatedCategory = await Category.findByIdAndUpdate(
@@ -54,19 +37,15 @@ const updateCategory = async (
     options
   );
 
-  if (updatedCategory) {
-    return updatedCategory;
+  if (!updatedCategory) {
+    throw new NotFoundError(`Category No Found with category id ${id}`);
   }
 
-  throw new NotFoundError(`Category No Found with category id ${id}`);
+  return updatedCategory;
 };
 
 // Todo: Delete a category by admin
 const deleteCategory = async (id: string) => {
-  if (!id) {
-    throw new BadRequestError("Please provide category id!");
-  }
-
   const category = await Category.findByIdAndDelete(id);
 
   if (category) {
@@ -77,8 +56,8 @@ const deleteCategory = async (id: string) => {
 };
 
 export default {
-  getAllCategory,
-  getOneCategory,
+  getAllCategories,
+  getSingleCategory,
   createCategory,
   updateCategory,
   deleteCategory,

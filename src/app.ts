@@ -2,8 +2,8 @@ import express from "express";
 import passport from "passport";
 import cors from "cors";
 
-import productsRouter from "./routers/productsRouter";
-import usersRouter from "./routers/usersRouter";
+import productsRouter from "./routers/productRouter";
+import usersRouter from "./routers/userRouter";
 import categoryRouter from "./routers/categoryRouter";
 import orderRouter from "./routers/orderRouter";
 import errorHandler from "./middlewares/errorHandler";

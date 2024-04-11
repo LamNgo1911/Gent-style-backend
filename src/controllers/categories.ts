@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 
-import Category from "../models/Category";
 import categoryService from "../services/categories";
+import { BadRequestError } from "../errors/ApiError";
 
 // Todo: Get all categories
-export async function getAllCategory(
+export async function getAllCategories(
   _: Request,
   response: Response,
   next: NextFunction
 ) {
   try {
-    const categories = await categoryService.getAllCategory();
+    const categories = await categoryService.getAllCategories();
 
     response.status(200).json({ categories });
   } catch (error) {
@@ -19,13 +19,19 @@ export async function getAllCategory(
 }
 
 // Todo: Get a single category
-export async function getOneCategory(
+export async function getSingleCategory(
   request: Request,
   response: Response,
   next: NextFunction
 ) {
   try {
-    const category = await categoryService.getOneCategory(request.params.id);
+    const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide category id!");
+    }
+
+    const category = await categoryService.getSingleCategory(id);
 
     response.status(201).json({ category });
   } catch (error) {
@@ -40,8 +46,13 @@ export async function createCategory(
   next: NextFunction
 ) {
   try {
-    const category = new Category(request.body);
-    const newCategory = await categoryService.createCategory(category);
+    const { name, image } = request.body;
+
+    if (!name || !image) {
+      throw new BadRequestError("Please fill out all the fields!");
+    }
+
+    const newCategory = await categoryService.createCategory(request.body);
 
     response.status(201).json({ newCategory });
   } catch (error) {
@@ -57,6 +68,14 @@ export async function updateCategory(
 ) {
   try {
     const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide category id!");
+    }
+
+    if (!request.body) {
+      throw new BadRequestError("Please provide props to update!");
+    }
 
     const updatedCategory = await categoryService.updateCategory(
       id,
@@ -77,6 +96,11 @@ export async function deleteCategory(
 ) {
   try {
     const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide category id!");
+    }
+
     const deletedCategory = await categoryService.deleteCategory(id);
 
     response

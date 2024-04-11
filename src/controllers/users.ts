@@ -6,16 +6,9 @@ import validator from "validator";
 import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
 
-import userService from "../services/user";
+import userService from "../services/users";
 import User, { UserDocument } from "../models/User";
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalServerError,
-  NotFoundError,
-  UnauthorizedError,
-  ConflictError,
-} from "../errors/ApiError";
+import { BadRequestError, ForbiddenError } from "../errors/ApiError";
 import { baseUrl } from "../api/baseUrl";
 import { loginPayload, UserStatus, UserToRegister } from "../misc/types";
 
@@ -25,15 +18,16 @@ export async function createUser(
   response: Response,
   next: NextFunction
 ) {
-  const { username, password, email, role, status } = request.body;
-
   try {
+    const { username, password, email, role, status } = request.body;
+
     if (!username || !password || !email) {
       throw new BadRequestError("Please fill out all the fields!");
     }
     if (!validator.isEmail(email)) {
       throw new BadRequestError("Please enter a valid email!");
     }
+
     const user = new User({
       username,
       password,
@@ -112,6 +106,10 @@ export async function forgotPassword(
     const user = await userService.getUserByEmail(email);
     const resetToken: string = uuid();
 
+    if (!email) {
+      throw new BadRequestError("Please provide your email!");
+    }
+
     if (!validator.isEmail(email)) {
       throw new BadRequestError("Please enter a valid email!");
     }
@@ -172,7 +170,7 @@ type UserQuery = {
 };
 
 // Todo: Get all users
-export async function getAllUser(
+export async function getAllUsers(
   request: Request,
   response: Response,
   next: NextFunction
@@ -195,16 +193,15 @@ export async function getAllUser(
     }
 
     const count = await User.countDocuments(query);
-    const pageCount = Math.ceil(count / limit);
 
-    const users = await userService.getAllUser(
+    const users = await userService.getAllUsers(
       query,
       "-createdAt",
       skip,
       limit
     );
 
-    response.status(200).json({ users, pagination: { count, pageCount } });
+    response.status(200).json({ users, count });
   } catch (error) {
     next(error);
   }
@@ -218,6 +215,10 @@ export async function getSingleUser(
 ) {
   try {
     const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide userId!");
+    }
 
     const user = await userService.getSingleUser(id);
 
@@ -236,6 +237,10 @@ export async function updateUser(
   try {
     const id = request.params.id;
     const { username, email } = request.body;
+
+    if (!id) {
+      throw new BadRequestError("Please provide userId!");
+    }
 
     if (!validator.isEmail(email)) {
       throw new BadRequestError("Please enter a valid email!");
@@ -256,15 +261,18 @@ export async function updatePassword(
   next: NextFunction
 ) {
   try {
+    const id = request.params.id;
     const { oldPassword, newPassword } = request.body;
 
-    if (!oldPassword || !newPassword) {
-      throw new BadRequestError(
-        "Please provide both oldPassword and newPassword!"
-      );
+    if (!id) {
+      throw new BadRequestError("Please provide userId!");
     }
 
-    const userData = await userService.getSingleUser(request.params.id);
+    if (!oldPassword || !newPassword) {
+      throw new BadRequestError("Please fill out all the fields!");
+    }
+
+    const userData = await userService.getSingleUser(id);
 
     const hashedPassword = userData.password;
 
@@ -290,9 +298,35 @@ export async function deleteUser(
 ) {
   try {
     const id = request.params.id;
+
+    if (!id) {
+      throw new BadRequestError("Please provide userId!");
+    }
+
     const user = await userService.deleteUser(id);
 
     response.status(200).json({ user, message: "User has been deleted" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Todo: ban or unban a user by admin
+export async function updateUserStatus(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  try {
+    const { userId, status } = request.body;
+
+    if (!userId || !status) {
+      throw new BadRequestError("Please provide userId and status!");
+    }
+
+    const user = await userService.updateUserStatus(userId, status);
+
+    response.status(200).json({ user });
   } catch (error) {
     next(error);
   }
@@ -395,77 +429,3 @@ export async function deleteUser(
 //     }
 //   }
 // }
-
-// export async function assingAdmin(request: Request, response: Response) {
-//   const id = request.params.id;
-//   const { role } = request.body;
-
-//   try {
-//     if (!id) {
-//       throw new BadRequestError("Missing user ID");
-//     }
-//     const updatedRole: UserDocument = await userService.assingAdmin(id, {
-//       role: role,
-//     });
-
-//     response.status(200).json(updatedRole);
-//   } catch (error) {
-//     if (error instanceof BadRequestError) {
-//       response.status(400).json({ error: "Invalid request" });
-//     } else if (error instanceof NotFoundError) {
-//       response.status(404).json({ error: "User not found" });
-//     } else if (error instanceof mongoose.Error.CastError) {
-//       response.status(400).json({
-//         message: "Wrong id",
-//       });
-//       return;
-//     } else {
-//       response.status(500).json({ error: "Internal Server Error" });
-//     }
-//   }
-// }
-
-// export async function removeAdmin(request: Request, response: Response) {
-//   const id = request.params.id;
-//   const { role } = request.body;
-
-//   try {
-//     if (!id) {
-//       throw new BadRequestError("Missing user ID");
-//     }
-//     const updatedRole: UserDocument = await userService.removeAdmin(id, {
-//       role: role,
-//     });
-
-//     response.status(200).json(updatedRole);
-//   } catch (error) {
-//     if (error instanceof BadRequestError) {
-//       response.status(400).json({ error: "Invalid request" });
-//     } else if (error instanceof NotFoundError) {
-//       response.status(404).json({ error: "User not found" });
-//     } else if (error instanceof mongoose.Error.CastError) {
-//       response.status(400).json({
-//         message: "Wrong id",
-//       });
-//       return;
-//     } else {
-//       response.status(500).json({ error: "Internal Server Error" });
-//     }
-//   }
-// }
-
-// Todo: ban or unban a user by admin
-export async function updateUserStatus(
-  request: Request,
-  response: Response,
-  next: NextFunction
-) {
-  try {
-    const { userId, status } = request.body;
-    const user = await userService.updateUserStatus(userId, status);
-
-    response.status(200).json({ user });
-  } catch (error) {
-    next(error);
-  }
-}

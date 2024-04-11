@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 // import GoogleTokenStrategy from "passport-google-id-token";
 import { Payload } from "../misc/types";
-import userService from "../services/user";
+import userService from "../services/users";
 // import User from "../models/User";
 // import { loginUserForGoogelUser, registerUserForGoogelUser } from "../controllers/users";
 // import bcrypt from "bcrypt";

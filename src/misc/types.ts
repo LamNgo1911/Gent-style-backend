@@ -81,3 +81,9 @@ export type loginPayload = {
   email: string;
   password: string;
 };
+
+// --------- Query ---------
+
+export type SortOptions = {
+  [key: string]: { [key: string]: number };
+};

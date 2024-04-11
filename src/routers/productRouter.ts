@@ -5,7 +5,7 @@ import {
   getAllProducts,
   createProduct,
   deleteProduct,
-  getOneProduct,
+  getSingleProduct,
   updateProduct,
 } from "../controllers/products";
 import adminCheck from "../middlewares/adminCheck";
@@ -13,8 +13,17 @@ import userStatusCheck from "../middlewares/userStatusCheck";
 
 const router = express.Router();
 
+// ---------- User ----------
+
+// Todo: Get all products
 router.get("/", getAllProducts);
-router.get("/:id", getOneProduct);
+
+// Todo: Get a single product
+router.get("/:id", getSingleProduct);
+
+// ---------- Admin ----------
+
+// Todo: Create a new product
 router.post(
   "/",
   passport.authenticate("jwt", { session: false }),
@@ -22,6 +31,8 @@ router.post(
   adminCheck,
   createProduct
 );
+
+// Todo: Update a product
 router.put(
   "/:id",
   passport.authenticate("jwt", { session: false }),
@@ -29,6 +40,8 @@ router.put(
   adminCheck,
   updateProduct
 );
+
+// Todo: Delete a product
 router.delete(
   "/:id",
   passport.authenticate("jwt", { session: false }),

@@ -2,7 +2,7 @@ import express from "express";
 import passport from "passport";
 
 import {
-  getAllUser,
+  getAllUsers,
   createUser,
   deleteUser,
   getSingleUser,
@@ -80,7 +80,7 @@ router.get(
   "/admin/users",
   passport.authenticate("jwt", { session: false }),
   adminCheck,
-  getAllUser
+  getAllUsers
 );
 
 // Todo: Get a single user by admin
