@@ -14,48 +14,58 @@ import userStatusCheck from "../middlewares/userStatusCheck";
 
 const router = express.Router();
 
-router.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
-  adminCheck,
-  getAllOrders
-);
+// ------------- user -------------
 
+// Todo: Create a new order
 router.post(
-  "/:userId",
+  "/users/:userId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   createOrder
 );
 
+// Todo: Get an order by id
 router.get(
-  "/admin/:orderId",
+  "/users/:userId/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   adminCheck,
   getOrderById
 );
 
+// ------------- Admin -------------
+
+// Todo: Get all orders by admin
+router.get(
+  "/admin",
+  passport.authenticate("jwt", { session: false }),
+  adminCheck,
+  getAllOrders
+);
+
+// Todo: Get all orders of an user
+router.get(
+  "/admin/:userId",
+  passport.authenticate("jwt", { session: false }),
+  userStatusCheck,
+  getAllOrdersByUserId
+);
+
+// Todo: Update an order by admin
 router.put(
-  "/:userId/:orderId",
+  "/admin/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   updateOrder
 );
 
+// Todo: Delete an order by admin
 router.delete(
-  "/:orderId",
+  "/admin/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   adminCheck,
   deleteOrder
-);
-
-router.get(
-  "/:userId/get-orders",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  getAllOrdersByUserId
 );
 
 export default router;

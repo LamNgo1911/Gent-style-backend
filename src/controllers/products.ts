@@ -31,7 +31,7 @@ export async function getAllProducts(
     const skip = (page - 1) * limit;
     const query: FilterQuery<ProductDocument> = {};
 
-    // Sort
+    // Todo: sort products
     const sortOptions: SortOptions = {
       "Latest added": { createdAt: -1 },
       "Most relevant": { createdAt: -1 },
@@ -44,7 +44,7 @@ export async function getAllProducts(
       query.sort = sortOptions[sort as keyof SortOptions];
     }
 
-    // Filter by category
+    // Todo: Filter products by category
     if (category && category !== "All category" && category !== "All") {
       const cate = await Category.findOne({ name: category });
       if (cate) {
@@ -52,7 +52,7 @@ export async function getAllProducts(
       }
     }
 
-    // Filter by price
+    // Todo:  Filter products by price
     if (priceOption === "Custom") {
       if (lowestPrice && highestPrice) {
         query.price = { $gte: lowestPrice, $lte: highestPrice };
@@ -63,17 +63,31 @@ export async function getAllProducts(
       }
     }
 
-    // Filter by size
-    query.sizes = size
-      ? Array.isArray(size)
-        ? size.map((s) => String(s).toLowerCase())
-        : String(size).toLowerCase()
-      : undefined;
+    // Todo: Filter products by size and color
+    if (size && color) {
+      query.variants = {
+        $elemMatch: {
+          size,
+          color,
+        },
+      };
+    } else if (size) {
+      // Todo: Filter products by size only
+      query.variants = {
+        $elemMatch: {
+          size,
+        },
+      };
+    } else if (color) {
+      // Todo: Filter products by color only
+      query.variants = {
+        $elemMatch: {
+          color,
+        },
+      };
+    }
 
-    // Filter by color
-    query.colors = color ? color : undefined;
-
-    // Filter by search
+    // Todo:  Filter products by search
     query.name = search ? { $regex: search, $options: "i" } : undefined;
 
     const [products, count] = await productsService.getAllProducts(
