@@ -44,6 +44,23 @@ const UserSchema = new Schema<UserDocument>({
     type: Date,
     default: null,
   },
+  shippingAddress: {
+    street: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    postalCode: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
+  },
   orders: [
     {
       type: Schema.Types.ObjectId,

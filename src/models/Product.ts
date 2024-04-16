@@ -25,10 +25,12 @@ const ProductSchema = new Schema({
     ref: "Category",
     required: true,
   },
-  image: {
-    type: String,
-    required: true,
-  },
+  images: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
   variants: [
     {
       color: {

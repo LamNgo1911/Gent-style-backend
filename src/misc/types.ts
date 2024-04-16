@@ -5,10 +5,19 @@ export enum Role {
   ADMIN = "ADMIN",
   USER = "USER",
 }
+
 export enum UserStatus {
   ACTIVE = "ACTIVE",
   DISABLED = "DISABLED",
 }
+
+export type ShippingAddress = {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
 
 export type UserToRegister = {
   username: string;
@@ -21,6 +30,7 @@ export type User = UserToRegister & {
   status: UserStatus;
   resetToken: string | null;
   resetTokenExpiresAt: Date | null;
+  shippingAddress: ShippingAddress;
   orders: Order[];
 };
 
@@ -53,22 +63,36 @@ export type Product = {
   price: number;
   description: string;
   category: Category;
-  image: string;
+  images: string;
   variants: Variant[];
 };
 
 // --------- Order ---------
+export enum OrderStatus {
+  PAID = "PAID",
+  PROCESSING = "PROCESSING",
+  SHIPPED = "SHIPPED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
+}
+
+export type Shipment = ShippingAddress & {
+  method: string;
+  trackingNumber: string;
+};
+
 export type OrderItem = {
   quantity: number;
-  productId: Types.ObjectId;
+  product: Types.ObjectId;
 };
 
 export type Order = {
   userId: Types.ObjectId;
   createdAt: Date;
-  shipment: string;
+  shipment: Shipment;
   priceSum: number;
   orderItems: OrderItem[];
+  status: OrderStatus;
 };
 
 // --------- Passport ---------

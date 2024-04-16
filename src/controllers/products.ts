@@ -7,6 +7,7 @@ import { ProductDocument } from "../models/Product";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
 import { SortOptions } from "../misc/types";
+import { uploadImages } from "../services/imageUpload";
 
 // Todo: Get all products
 export async function getAllProducts(
@@ -88,8 +89,10 @@ export async function getAllProducts(
     }
 
     // Todo:  Filter products by search
-    query.name = search ? { $regex: search, $options: "i" } : undefined;
-
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+    console.log(query);
     const [products, count] = await productsService.getAllProducts(
       query,
       skip,
@@ -130,25 +133,34 @@ export async function createProduct(
   next: NextFunction
 ) {
   try {
-    const { name, price, description, category, image, variants } =
+    const { name, price, description, category, images, variants } =
       request.body;
 
-    if (!name || !price || !description || !category || !image || !variants) {
+    if (
+      !name ||
+      !price ||
+      !description ||
+      !category ||
+      images.length < 0 ||
+      !variants
+    ) {
       throw new BadRequestError("Please fill out all fields!");
     }
 
-    const checkedCategory = await Category.findOne({ name: category });
+    const checkedCategory = await Category.findOne({ _id: category });
 
     if (!checkedCategory) {
       throw new BadRequestError("Category Not Found");
     }
+
+    const uploadedImages = await uploadImages(images);
 
     const product = new Product({
       name,
       price,
       description,
       category,
-      image,
+      images: uploadedImages,
       variants,
     });
 

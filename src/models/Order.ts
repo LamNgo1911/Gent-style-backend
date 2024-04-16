@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { Order, OrderItem } from "../misc/types";
+import { Order, OrderItem, OrderStatus } from "../misc/types";
 
 export type OrderDocument = Document & Order;
 
@@ -10,7 +10,7 @@ const OrderItemSchema = new Schema<OrderItemDocument>({
     type: Number,
     required: true,
   },
-  productId: {
+  product: {
     type: Schema.Types.ObjectId,
     ref: "Product",
     required: true,
@@ -29,14 +29,48 @@ const OrderSchema = new Schema<OrderDocument>({
     required: true,
   },
   shipment: {
-    type: String,
-    required: true,
+    method: {
+      type: String,
+      required: true,
+    },
+    trackingNumber: {
+      type: String,
+      required: false,
+    },
+    address: {
+      street: {
+        type: String,
+        required: true,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      postalCode: {
+        type: String,
+        required: true,
+      },
+      country: {
+        type: String,
+        required: true,
+      },
+    },
   },
   priceSum: {
     type: Number,
     required: true,
   },
   orderItems: [OrderItemSchema],
+  status: {
+    type: String,
+    enum: Object.values(OrderStatus),
+    default: OrderStatus.PAID,
+    required: true,
+  },
 });
 
 export default mongoose.model<OrderDocument>("Orders", OrderSchema);

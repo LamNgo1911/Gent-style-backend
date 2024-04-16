@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 
 import categoryService from "../services/categories";
 import { BadRequestError } from "../errors/ApiError";
+import Category from "../models/Category";
+import cloudinary from "../config/cloudinary";
+import { uploadImages } from "../services/imageUpload";
 
 // Todo: Get all categories
 export async function getAllCategories(
@@ -46,13 +49,22 @@ export async function createCategory(
   next: NextFunction
 ) {
   try {
-    const { name, image } = request.body;
+    const { name } = request.body;
+    const image = request.file;
 
     if (!name || !image) {
       throw new BadRequestError("Please fill out all the fields!");
     }
 
-    const newCategory = await categoryService.createCategory(request.body);
+    // Upload the image to Cloudinary
+    const uploadedImages = await uploadImages([image]);
+
+    const category = new Category({
+      name,
+      image: uploadedImages[0],
+    });
+
+    const newCategory = await categoryService.createCategory(category);
 
     response.status(201).json({ newCategory });
   } catch (error) {

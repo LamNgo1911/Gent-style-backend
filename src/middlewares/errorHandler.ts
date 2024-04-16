@@ -15,6 +15,7 @@ function apiErrorhandler(
   response: Response,
   next: NextFunction
 ) {
+  console.log(error);
   if (error instanceof BadRequestError) {
     response.status(400).json({ message: error.message });
   } else if (error instanceof ConflictError) {
