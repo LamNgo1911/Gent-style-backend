@@ -19,7 +19,7 @@ async function uploadImages(files: Express.Multer.File[]): Promise<string[]> {
       );
       uploadedImages.push(uploadResult.secure_url);
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.log(error);
       throw new BadRequestError("Error uploading image");
     }
   }

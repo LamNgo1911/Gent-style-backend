@@ -1,10 +1,29 @@
 import mongoose, { Document } from "mongoose";
 
-import { Product, Size } from "../misc/types";
+import { Color, Product, Size } from "../misc/types";
 
 const Schema = mongoose.Schema;
 
+export type ColorDocument = Document & Color;
 export type ProductDocument = Document & Product;
+
+const ColorSchema = new Schema<ColorDocument>({
+  color: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  images: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
+  countImages: {
+    type: Number,
+    required: true,
+  },
+});
 
 const ProductSchema = new Schema({
   name: {
@@ -25,19 +44,9 @@ const ProductSchema = new Schema({
     ref: "Category",
     required: true,
   },
-  images: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
   variants: [
     {
-      color: {
-        type: String,
-        required: true,
-        default: "NONE",
-      },
+      color: ColorSchema,
       size: {
         type: String,
         enum: Object.values(Size),

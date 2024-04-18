@@ -10,8 +10,10 @@ import {
 } from "../controllers/categories";
 import userStatusCheck from "../middlewares/userStatusCheck";
 import adminCheck from "../middlewares/adminCheck";
+import multer from "multer";
 
 const router = express.Router();
+const upload = multer({ dest: "src/uploads" });
 
 // ------------ User ------------
 
@@ -29,6 +31,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   adminCheck,
+  upload.single("image"),
   createCategory
 );
 

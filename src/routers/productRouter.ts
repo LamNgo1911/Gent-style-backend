@@ -10,8 +10,10 @@ import {
 } from "../controllers/products";
 import adminCheck from "../middlewares/adminCheck";
 import userStatusCheck from "../middlewares/userStatusCheck";
+import multer from "multer";
 
 const router = express.Router();
+const upload = multer({ dest: "src/uploads" }).array("images", 5);
 
 // ---------- User ----------
 
@@ -29,6 +31,7 @@ router.post(
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   adminCheck,
+  upload,
   createProduct
 );
 

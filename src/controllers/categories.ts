@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import categoryService from "../services/categories";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
-import cloudinary from "../config/cloudinary";
 import { uploadImages } from "../services/imageUpload";
 
 // Todo: Get all categories
@@ -50,14 +49,14 @@ export async function createCategory(
 ) {
   try {
     const { name } = request.body;
-    const image = request.file;
+    const file = request.file;
 
-    if (!name || !image) {
+    if (!name || !file) {
       throw new BadRequestError("Please fill out all the fields!");
     }
 
     // Upload the image to Cloudinary
-    const uploadedImages = await uploadImages([image]);
+    const uploadedImages = await uploadImages([file]);
 
     const category = new Category({
       name,
@@ -65,7 +64,6 @@ export async function createCategory(
     });
 
     const newCategory = await categoryService.createCategory(category);
-
     response.status(201).json({ newCategory });
   } catch (error) {
     next(error);

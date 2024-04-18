@@ -51,8 +51,14 @@ export enum Size {
   NONE = "NONE",
 }
 
-export type Variant = {
+export type Color = {
   color: string;
+  images: string[];
+  countImages: number;
+};
+
+export type Variant = {
+  color: Color;
   size: Size;
   stock: number;
 };
@@ -63,7 +69,6 @@ export type Product = {
   price: number;
   description: string;
   category: Category;
-  images: string;
   variants: Variant[];
 };
 

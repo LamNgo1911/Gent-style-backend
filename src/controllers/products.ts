@@ -6,7 +6,7 @@ import productsService from "../services/products";
 import { ProductDocument } from "../models/Product";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
-import { SortOptions } from "../misc/types";
+import { SortOptions, Variant } from "../misc/types";
 import { uploadImages } from "../services/imageUpload";
 
 // Todo: Get all products
@@ -133,16 +133,16 @@ export async function createProduct(
   next: NextFunction
 ) {
   try {
-    const { name, price, description, category, images, variants } =
-      request.body;
+    const { name, price, description, category, variants } = request.body;
+    const files = request.files as Express.Multer.File[];
 
     if (
       !name ||
       !price ||
       !description ||
       !category ||
-      images.length < 0 ||
-      !variants
+      files.length === 0 ||
+      variants.length === 0
     ) {
       throw new BadRequestError("Please fill out all fields!");
     }
@@ -152,19 +152,29 @@ export async function createProduct(
     if (!checkedCategory) {
       throw new BadRequestError("Category Not Found");
     }
+    const uploadedImages = await uploadImages(files);
+    console.log(uploadedImages, variants);
 
-    const uploadedImages = await uploadImages(images);
-
-    const product = new Product({
+    const variantData = variants.map((variant: Variant) => {
+      const variantImages = uploadedImages.splice(0, variant.color.countImages);
+      return {
+        ...variant,
+        color: {
+          ...variant.color,
+          images: variantImages,
+        },
+      };
+    });
+    const productData = new Product({
       name,
       price,
       description,
       category,
-      images: uploadedImages,
-      variants,
+      variants: variantData,
     });
+    console.log(variantData);
 
-    const newProduct = await productsService.createProduct(product);
+    const newProduct = await productsService.createProduct(productData);
 
     response.status(201).json({ newProduct });
   } catch (error) {
