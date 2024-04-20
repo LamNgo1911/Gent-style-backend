@@ -45,7 +45,7 @@ describe("User controller test", () => {
 
     const response = await request(app)
       .post("/api/v1/users/login")
-      .send({ email: userinfo.body.user.email, password: "123lam" });
+      .send({ email: userinfo.body.newUser.email, password: "123lam" });
 
     // Assertions
     expect(response.status).toBe(200);
@@ -61,7 +61,7 @@ describe("User controller test", () => {
 
   //   const response = await request(app)
   //     .post("/api/v1/users/forgot-password")
-  //     .send({ email: userinfo.body.user.email });
+  //     .send({ email: userinfo.body.newUser.email });
 
   //   // Assertions
   //   expect(response.status).toBe(200);
@@ -75,7 +75,7 @@ describe("User controller test", () => {
   //     "Lam"
   //   );
 
-  //   const res = await sendVerification(userinfo.body.user.email);
+  //   const res = await sendVerification(userinfo.body.newUser.email);
   //   console.log(res.body.resetToken);
   //   const response = await request(app)
   //     .post(`/api/v1/users/reset-password?resetToken=${res.body.resetToken}`)
@@ -93,7 +93,7 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.user.email, "123lam");
+    const userData = await getToken(userinfo.body.newUser.email, "123lam");
     token = userData.body.token;
 
     const response = await request(app)
@@ -112,11 +112,11 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.user.email, "123lam");
+    const userData = await getToken(userinfo.body.newUser.email, "123lam");
     token = userData.body.token;
 
     const response = await request(app)
-      .get(`/api/v1/admin/users/${userinfo.body.user._id}`)
+      .get(`/api/v1/admin/users/${userinfo.body.newUser._id}`)
       .set("Authorization", "Bearer " + token);
 
     // Assertions
@@ -131,7 +131,7 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.user.email, "123lam");
+    const userData = await getToken(userinfo.body.newUser.email, "123lam");
     token = userData.body.token;
 
     const newUserInfo = {
@@ -140,7 +140,7 @@ describe("User controller test", () => {
     };
 
     const response = await request(app)
-      .put(`/api/v1/admin/users/${userinfo.body.user._id}`)
+      .put(`/api/v1/admin/users/${userinfo.body.newUser._id}`)
       .set("Authorization", "Bearer " + token)
       .send(newUserInfo);
 
@@ -156,7 +156,10 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userAdmin = await getToken(userinfoAdmin.body.user.email, "123lam");
+    const userAdmin = await getToken(
+      userinfoAdmin.body.newUser.email,
+      "123lam"
+    );
     token = userAdmin.body.token;
 
     const userinfo1 = await createUser(
@@ -169,7 +172,7 @@ describe("User controller test", () => {
     const response = await request(app)
       .post(`/api/v1/admin/users/change-status`)
       .set("Authorization", "Bearer " + token)
-      .send({ userId: userinfo1.body.user._id, status: "DISABLED" });
+      .send({ userId: userinfo1.body.newUser._id, status: "DISABLED" });
 
     // Assertions
     expect(response.status).toBe(200);

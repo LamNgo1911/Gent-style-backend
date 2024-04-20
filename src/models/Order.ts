@@ -24,11 +24,6 @@ const OrderSchema = new Schema<OrderDocument>(
       ref: "User",
       required: true,
     },
-    createdAt: {
-      default: Date.now(),
-      type: Date,
-      required: true,
-    },
     shipment: {
       method: {
         type: String,
@@ -76,4 +71,4 @@ const OrderSchema = new Schema<OrderDocument>(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-export default mongoose.model<OrderDocument>("Orders", OrderSchema);
+export default mongoose.model<OrderDocument>("Order", OrderSchema);

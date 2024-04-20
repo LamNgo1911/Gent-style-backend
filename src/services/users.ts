@@ -5,9 +5,7 @@ import User, { UserDocument } from "../models/User";
 import { NotFoundError, ConflictError } from "../errors/ApiError";
 
 // Todo: Create a new user
-const createUser = async (
-  user: UserDocument
-): Promise<UserDocument | string> => {
+const createUser = async (user: UserDocument): Promise<UserDocument> => {
   const { email } = user;
 
   const isEmailAlreadyAdded = await User.findOne({ email });
@@ -90,12 +88,7 @@ const getAllUsers = async function getUsers(
   skip: number,
   limit: number
 ): Promise<UserDocument[]> {
-  return await User.find(query)
-    .sort(sort)
-    .skip(skip)
-    .limit(limit)
-    .lean()
-    .populate("orders");
+  return await User.find(query).skip(skip).limit(limit).sort(sort).lean();
 };
 
 // Todo: Get a single user
@@ -133,11 +126,8 @@ const deleteUser = async (id: string) => {
   return user;
 };
 
-// Todo: ban or unban a user by admin
-const updateUserStatus = async (
-  userId: string,
-  status: UpdateQuery<Partial<UserDocument>>
-) => {
+// Todo: Ban or unban a user by admin
+const updateUserStatus = async (userId: string, status: string) => {
   const options = { new: true, runValidators: true };
   const user = await User.findByIdAndUpdate(userId, { status }, options);
 
@@ -148,7 +138,7 @@ const updateUserStatus = async (
   return user;
 };
 
-// Todo: find or create user
+// Todo: Find or create user
 const findOrCreate = async (payload: Partial<UserDocument>) => {
   const user = await User.findOne({ email: payload.email });
   if (user) {

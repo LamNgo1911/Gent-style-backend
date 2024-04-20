@@ -86,7 +86,6 @@ export type OrderItem = {
 
 export type Order = {
   userId: Types.ObjectId;
-  createdAt: Date;
   shipment: Shipment;
   priceSum: number;
   orderItems: OrderItem[];

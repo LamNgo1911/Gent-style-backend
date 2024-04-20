@@ -38,7 +38,7 @@
     "start": "node ts-node server.ts",
     "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
     "build": "tsc -p .",
-    "test": "jest --runInBand --forceExit --detectOpenHandles --coverage"
+    "test": "jest --runInBand --forceExit --detectOpenHandles --coverage  --verbose false"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

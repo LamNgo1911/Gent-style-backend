@@ -18,7 +18,7 @@ const router = express.Router();
 
 // Todo: Create a new order
 router.post(
-  "/users/:userId",
+  "/",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   createOrder
@@ -26,42 +26,42 @@ router.post(
 
 // Todo: Get an order by id
 router.get(
-  "/users/:userId/:orderId",
+  "/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
-  adminCheck,
   getOrderById
+);
+
+// Todo: Get all orders by userId
+router.get(
+  "/users/:userId",
+  passport.authenticate("jwt", { session: false }),
+  userStatusCheck,
+  getAllOrdersByUserId
 );
 
 // ------------- Admin -------------
 
 // Todo: Get all orders by admin
 router.get(
-  "/admin",
+  "/",
   passport.authenticate("jwt", { session: false }),
   adminCheck,
   getAllOrders
 );
 
-// Todo: Get all orders of an user
-router.get(
-  "/admin/:userId",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  getAllOrdersByUserId
-);
-
 // Todo: Update an order by admin
 router.put(
-  "/admin/:orderId",
+  "/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
+  adminCheck,
   updateOrder
 );
 
 // Todo: Delete an order by admin
 router.delete(
-  "/admin/:orderId",
+  "/:orderId",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   adminCheck,

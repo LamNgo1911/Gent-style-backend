@@ -38,7 +38,7 @@ export async function createUser(
 
     const newUser = await userService.createUser(user);
 
-    response.status(201).json({ user: newUser });
+    response.status(201).json({ newUser });
   } catch (error) {
     next(error);
   }
@@ -80,7 +80,13 @@ export async function loginUser(
     const token = generateToken(user, "1d");
     const refreshToken = generateToken(user, "20d");
 
-    const userInfo = { email: user.email, username: user.username };
+    const userInfo = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      id: user.id,
+    };
 
     response
       .status(200)

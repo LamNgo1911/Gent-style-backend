@@ -1,4 +1,4 @@
-import request from "supertest";
+import request, { SuperTest, Test } from "supertest";
 
 import app from "../src/app";
 

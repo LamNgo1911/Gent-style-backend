@@ -80,7 +80,7 @@ export async function getAllProducts(
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
-    console.log(query);
+
     const [products, count] = await productsService.getAllProducts(
       query,
       skip,
@@ -108,7 +108,7 @@ export async function getSingleProduct(
 
     const product = await productsService.getSingleProduct(id);
 
-    response.status(201).json({ product });
+    response.status(200).json({ product });
   } catch (error) {
     next(error);
   }
@@ -136,8 +136,6 @@ export async function createProduct(
       throw new BadRequestError("Please fill out all fields!");
     }
 
-    console.log(variants);
-
     const checkedCategory = await Category.findOne({ _id: category });
 
     if (!checkedCategory) {
@@ -153,8 +151,6 @@ export async function createProduct(
       variants,
       images: uploadedImages,
     });
-
-    console.log(productData, "test");
 
     const newProduct = await productsService.createProduct(productData);
 
