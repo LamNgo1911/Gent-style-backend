@@ -17,60 +17,63 @@ const OrderItemSchema = new Schema<OrderItemDocument>({
   },
 });
 
-const OrderSchema = new Schema<OrderDocument>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  createdAt: {
-    default: Date.now(),
-    type: Date,
-    required: true,
-  },
-  shipment: {
-    method: {
-      type: String,
+const OrderSchema = new Schema<OrderDocument>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    trackingNumber: {
+    createdAt: {
+      default: Date.now(),
+      type: Date,
+      required: true,
+    },
+    shipment: {
+      method: {
+        type: String,
+        required: true,
+      },
+      trackingNumber: {
+        type: String,
+        required: false,
+      },
+      address: {
+        street: {
+          type: String,
+          required: true,
+        },
+        city: {
+          type: String,
+          required: true,
+        },
+        state: {
+          type: String,
+          required: true,
+        },
+        postalCode: {
+          type: String,
+          required: true,
+        },
+        country: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    priceSum: {
+      type: Number,
+      required: true,
+    },
+    orderItems: [OrderItemSchema],
+    status: {
       type: String,
-      required: false,
-    },
-    address: {
-      street: {
-        type: String,
-        required: true,
-      },
-      city: {
-        type: String,
-        required: true,
-      },
-      state: {
-        type: String,
-        required: true,
-      },
-      postalCode: {
-        type: String,
-        required: true,
-      },
-      country: {
-        type: String,
-        required: true,
-      },
+      enum: Object.values(OrderStatus),
+      default: OrderStatus.PAID,
+      required: true,
     },
   },
-  priceSum: {
-    type: Number,
-    required: true,
-  },
-  orderItems: [OrderItemSchema],
-  status: {
-    type: String,
-    enum: Object.values(OrderStatus),
-    default: OrderStatus.PAID,
-    required: true,
-  },
-});
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
 
 export default mongoose.model<OrderDocument>("Orders", OrderSchema);

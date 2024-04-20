@@ -109,6 +109,7 @@ export async function getOrderById(
   }
 }
 
+// Todo: update an order
 export async function updateOrder(
   request: Request,
   response: Response,

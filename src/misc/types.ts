@@ -36,7 +36,6 @@ export type User = UserToRegister & {
 
 // --------- Category ---------
 export type Category = {
-  id: string;
   name: string;
   image: string;
 };
@@ -51,25 +50,19 @@ export enum Size {
   NONE = "NONE",
 }
 
-export type Color = {
-  color: string;
-  images: string[];
-  countImages: number;
-};
-
 export type Variant = {
-  color: Color;
+  color: string;
   size: Size;
   stock: number;
 };
 
 export type Product = {
-  id: string;
   name: string;
   price: number;
   description: string;
-  category: Category;
+  category: Types.ObjectId;
   variants: Variant[];
+  images: string[];
 };
 
 // --------- Order ---------

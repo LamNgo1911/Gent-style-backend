@@ -1,66 +1,56 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
-import { Color, Product, Size } from "../misc/types";
+import { Product, Size } from "../misc/types";
 
-const Schema = mongoose.Schema;
-
-export type ColorDocument = Document & Color;
 export type ProductDocument = Document & Product;
 
-const ColorSchema = new Schema<ColorDocument>({
+const VariantSchema = new Schema({
   color: {
     type: String,
     required: true,
-    unique: true,
   },
-  images: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
-  countImages: {
+  size: {
+    type: String,
+    required: true,
+    enum: Object.values(Size), // Enumerate available sizes
+  },
+  stock: {
     type: Number,
     required: true,
+    min: 0,
   },
 });
 
-const ProductSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  price: {
-    type: Number,
-    min: 0,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  category: {
-    type: Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
-  },
-  variants: [
-    {
-      color: ColorSchema,
-      size: {
-        type: String,
-        enum: Object.values(Size),
-        required: true,
-        default: Size.NONE,
-      },
-      stock: {
-        type: Number,
-        required: true,
-        min: 0,
-      },
+const ProductSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-  ],
-});
+    price: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    variants: [VariantSchema], // Use the VariantSchema as a subdocument
+    images: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+  },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
 
 ProductSchema.index({ name: "text" });
 

@@ -36,7 +36,6 @@ const getSingleProduct = async (
 const createProduct = async (
   product: ProductDocument
 ): Promise<ProductDocument> => {
-  console.log(product);
   return await product.save();
 };
 

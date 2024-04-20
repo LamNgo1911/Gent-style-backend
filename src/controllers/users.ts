@@ -10,7 +10,8 @@ import userService from "../services/users";
 import User, { UserDocument } from "../models/User";
 import { BadRequestError, ForbiddenError } from "../errors/ApiError";
 import { baseUrl } from "../api/baseUrl";
-import { loginPayload, UserStatus, UserToRegister } from "../misc/types";
+import { UserStatus } from "../misc/types";
+import { generateToken } from "../utils/generateToken";
 
 // Todo: Create a new user
 export async function createUser(
@@ -19,7 +20,7 @@ export async function createUser(
   next: NextFunction
 ) {
   try {
-    const { username, password, email, role, status } = request.body;
+    const { username, password, email, role } = request.body;
 
     if (!username || !password || !email) {
       throw new BadRequestError("Please fill out all the fields!");
@@ -33,7 +34,6 @@ export async function createUser(
       password,
       email,
       role,
-      status,
     });
 
     const newUser = await userService.createUser(user);
@@ -77,19 +77,14 @@ export async function loginUser(
       );
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
-      expiresIn: "1d",
-    });
+    const token = generateToken(user, "1d");
+    const refreshToken = generateToken(user, "20d");
 
-    const refreshToken = jwt.sign(
-      { email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: "20d" }
-    );
+    const userInfo = { email: user.email, username: user.username };
 
     response
       .status(200)
-      .json({ token: token, refreshToken: refreshToken, user });
+      .json({ token: token, refreshToken: refreshToken, user: userInfo });
   } catch (error) {
     next(error);
   }
@@ -114,7 +109,7 @@ export async function forgotPassword(
       throw new BadRequestError("Please enter a valid email!");
     }
 
-    const verificationLink = `${baseUrl}/reset-password?resetToken=${resetToken}`;
+    const verificationLink = `${baseUrl}/api/v1/users/reset-password?resetToken=${resetToken}`;
     await userService.sendVerificationEmail(email, verificationLink);
 
     user.resetToken = resetToken;
@@ -124,7 +119,7 @@ export async function forgotPassword(
 
     response
       .status(200)
-      .json({ message: "Verification email sent successfully." });
+      .json({ message: "Verification email sent successfully.", resetToken });
   } catch (error) {
     next(error);
   }
@@ -332,100 +327,19 @@ export async function updateUserStatus(
   }
 }
 
-// export async function googleLogin(request: Request, response: Response) {
-//   console.log("hello google login");
-//   try {
-//   } catch (error) {
-//     console.log(error);
-//     throw new InternalServerError("Something went wrong");
-//   }
-// }
-// export async function googleLoginCallback(
-//   request: Request,
-//   response: Response
-// ) {
-//   console.log("inside the google login callback");
-//   try {
-//     const user = request.user;
-//     response.status(200).json({ user });
-//   } catch (error) {
-//     console.log(error);
-//     throw new InternalServerError("Something went wrong");
-//   }
-// }
+// Todo: Login with google
+export async function googleLogin(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  try {
+    // logic
+    const userGoogleData = request.user as UserDocument;
+    const token = generateToken(userGoogleData, "1h");
 
-// export async function loginUserForGoogelUser(data: loginPayload) {
-//   try {
-//     const { email, password } = data;
-//     const userData = await userService.getUserByEmail(email);
-//     const hashedPassword = userData.password;
-
-//     const isPasswordCorrect = await bcrypt.hash(
-//       password.toString(),
-//       hashedPassword.toString()
-//     );
-
-//     if (!isPasswordCorrect) {
-//       throw new BadRequestError("Wrong password");
-//     }
-
-//     const token = jwt.sign({ email: userData.email }, process.env.JWT_SECRET!, {
-//       expiresIn: "1h",
-//     });
-
-//     const refreshToken = jwt.sign(
-//       { email: userData.email, role: userData.role },
-//       process.env.JWT_SECRET!,
-//       { expiresIn: "20d" }
-//     );
-
-//     return { token: token, refreshToken: refreshToken, userData };
-//   } catch (error) {
-//     if (error instanceof BadRequestError) {
-//       throw new BadRequestError(error.message);
-//     } else if (error instanceof UnauthorizedError) {
-//       throw new UnauthorizedError(error.message);
-//     } else if (error instanceof NotFoundError) {
-//       throw new NotFoundError(error.message);
-//     } else {
-//       throw new InternalServerError("Internal server error");
-//     }
-//   }
-// }
-// export async function registerUserForGoogelUser(data: UserToRegister) {
-//   const { username, password, email } = data;
-
-//   try {
-//     if (!username || !password || !email) {
-//       throw new BadRequestError("Fill out all the fields");
-//     } else if (!validator.isEmail(email)) {
-//       throw new BadRequestError("Please enter a valid email");
-//     }
-//     const saltRounds = 10;
-//     const salt = await bcrypt.genSalt(saltRounds);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-
-//     const user = new User({
-//       username,
-//       password: hashedPassword,
-//       email,
-//       role: "CUSTOMER",
-//       status: "ACTIVE",
-//     });
-
-//     const newUser = (await userService.createUser(user)) as UserDocument;
-//     const loginUser = await loginUserForGoogelUser({
-//       email: newUser["email"],
-//       password: newUser["password"],
-//     });
-//     return { loginUser };
-//   } catch (error) {
-//     if (error instanceof BadRequestError) {
-//       throw new BadRequestError(error.message);
-//     } else if (error instanceof InternalServerError) {
-//       throw new InternalServerError("Something went wrong");
-//     } else {
-//       throw new InternalServerError("Something went wrong");
-//     }
-//   }
-// }
+    response.status(200).json({ token, userGoogleData });
+  } catch (error) {
+    next(error);
+  }
+}

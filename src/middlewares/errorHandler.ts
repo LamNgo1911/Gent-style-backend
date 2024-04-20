@@ -32,6 +32,8 @@ function apiErrorhandler(
     response.status(404).json({ message: error.message });
   } else if (error instanceof ForbiddenError) {
     response.status(403).json({ message: error.message });
+  } else if (error.message.startsWith("E11000 duplicate")) {
+    response.status(400).json({ message: error.message });
   } else {
     response.status(500).json({ message: "Internal Server Error" });
   }

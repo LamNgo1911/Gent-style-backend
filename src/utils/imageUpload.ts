@@ -1,8 +1,10 @@
 import { UploadApiResponse } from "cloudinary";
+import fs from "fs";
+
 import { BadRequestError } from "../errors/ApiError";
 import cloudinary from "../config/cloudinary";
 
-// Todo: upload images to Cloudinary
+// Todo: Upload images to Cloudinary
 async function uploadImages(files: Express.Multer.File[]): Promise<string[]> {
   const uploadedImages: string[] = [];
 
@@ -18,6 +20,7 @@ async function uploadImages(files: Express.Multer.File[]): Promise<string[]> {
         file.path
       );
       uploadedImages.push(uploadResult.secure_url);
+      fs.unlinkSync(file.path);
     } catch (error) {
       console.log(error);
       throw new BadRequestError("Error uploading image");

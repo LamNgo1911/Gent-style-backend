@@ -42,7 +42,7 @@ const sendVerificationEmail = async (
     secure: true,
     auth: {
       user: "lamngo606@gmail.com",
-      pass: "nlrpjsxylajeyhnp",
+      pass: process.env.NODEMAILER_PASSWORD,
     },
   });
 
@@ -148,6 +148,22 @@ const updateUserStatus = async (
   return user;
 };
 
+// Todo: find or create user
+const findOrCreate = async (payload: Partial<UserDocument>) => {
+  const user = await User.findOne({ email: payload.email });
+  if (user) {
+    return user;
+  } else {
+    const user = new User({
+      email: payload.email,
+      password: payload.password,
+      role: "user",
+    });
+    const createdUser = await user.save();
+    return createdUser;
+  }
+};
+
 export default {
   getAllUsers,
   getSingleUser,
@@ -158,7 +174,6 @@ export default {
   sendVerificationEmail,
   updatePassword,
   getUserByResetToken,
-  // assingAdmin,
-  // removeAdmin,
   updateUserStatus,
+  findOrCreate,
 };

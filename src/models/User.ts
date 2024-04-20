@@ -11,63 +11,66 @@ type UserDocumentMethods = {
 
 export type UserDocument = Document & User & UserDocumentMethods;
 
-const UserSchema = new Schema<UserDocument>({
-  username: {
-    type: String,
-    required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    minLength: 4,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  role: {
-    type: String,
-    enum: [Role.ADMIN, Role.USER],
-    default: Role.USER,
-  },
-  status: {
-    type: String,
-    enum: [UserStatus.ACTIVE, UserStatus.DISABLED],
-    default: UserStatus.ACTIVE,
-  },
-  resetToken: {
-    type: String,
-    default: null,
-  },
-  resetTokenExpiresAt: {
-    type: Date,
-    default: null,
-  },
-  shippingAddress: {
-    street: {
+const UserSchema = new Schema<UserDocument>(
+  {
+    username: {
       type: String,
+      required: true,
     },
-    city: {
+    password: {
       type: String,
+      required: true,
+      minLength: 4,
     },
-    state: {
+    email: {
       type: String,
+      required: true,
+      unique: true,
     },
-    postalCode: {
+    role: {
       type: String,
+      enum: [Role.ADMIN, Role.USER],
+      default: Role.USER,
     },
-    country: {
+    status: {
       type: String,
+      enum: [UserStatus.ACTIVE, UserStatus.DISABLED],
+      default: UserStatus.ACTIVE,
     },
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    shippingAddress: {
+      street: {
+        type: String,
+      },
+      city: {
+        type: String,
+      },
+      state: {
+        type: String,
+      },
+      postalCode: {
+        type: String,
+      },
+      country: {
+        type: String,
+      },
+    },
+    orders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Orders",
+      },
+    ],
   },
-  orders: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Orders",
-    },
-  ],
-});
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
 
 // Todo: This middleware will hash password before saving user into database
 UserSchema.pre("save", async function (next) {

@@ -7,7 +7,7 @@ import { ProductDocument } from "../models/Product";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
 import { SortOptions, Variant } from "../misc/types";
-import { uploadImages } from "../services/imageUpload";
+import { uploadImages } from "../utils/imageUpload";
 
 // Todo: Get all products
 export async function getAllProducts(
@@ -66,26 +66,14 @@ export async function getAllProducts(
 
     // Todo: Filter products by size and color
     if (size && color) {
-      query.variants = {
-        $elemMatch: {
-          size,
-          color,
-        },
-      };
+      query["variants.color"] = color;
+      query["variants.size"] = size;
     } else if (size) {
       // Todo: Filter products by size only
-      query.variants = {
-        $elemMatch: {
-          size,
-        },
-      };
+      query["variants.size"] = size;
     } else if (color) {
       // Todo: Filter products by color only
-      query.variants = {
-        $elemMatch: {
-          color,
-        },
-      };
+      query["variants.color"] = color;
     }
 
     // Todo:  Filter products by search
@@ -142,10 +130,13 @@ export async function createProduct(
       !description ||
       !category ||
       files.length === 0 ||
+      !variants ||
       variants.length === 0
     ) {
       throw new BadRequestError("Please fill out all fields!");
     }
+
+    console.log(variants);
 
     const checkedCategory = await Category.findOne({ _id: category });
 
@@ -153,26 +144,17 @@ export async function createProduct(
       throw new BadRequestError("Category Not Found");
     }
     const uploadedImages = await uploadImages(files);
-    console.log(uploadedImages, variants);
 
-    const variantData = variants.map((variant: Variant) => {
-      const variantImages = uploadedImages.splice(0, variant.color.countImages);
-      return {
-        ...variant,
-        color: {
-          ...variant.color,
-          images: variantImages,
-        },
-      };
-    });
     const productData = new Product({
       name,
       price,
       description,
       category,
-      variants: variantData,
+      variants,
+      images: uploadedImages,
     });
-    console.log(variantData);
+
+    console.log(productData, "test");
 
     const newProduct = await productsService.createProduct(productData);
 

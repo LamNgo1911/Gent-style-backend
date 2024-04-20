@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import categoryService from "../services/categories";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
-import { uploadImages } from "../services/imageUpload";
+import { uploadImages } from "../utils/imageUpload";
 
 // Todo: Get all categories
 export async function getAllCategories(
@@ -35,7 +35,7 @@ export async function getSingleCategory(
 
     const category = await categoryService.getSingleCategory(id);
 
-    response.status(201).json({ category });
+    response.status(200).json({ category });
   } catch (error) {
     next(error);
   }

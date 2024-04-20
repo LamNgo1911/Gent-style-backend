@@ -11,10 +11,8 @@ import {
   forgotPassword,
   updatePassword,
   updateUserStatus,
-  // assingAdmin,
-  // removeAdmin,
-  // googleLoginCallback,
   resetPassword,
+  googleLogin,
 } from "../controllers/users";
 
 import adminCheck from "../middlewares/adminCheck";
@@ -35,19 +33,14 @@ router.route("/users/forgot-password").post(forgotPassword);
 // Todo: reset user's password
 router.route("/users/reset-password").post(resetPassword);
 
-// router.get(
-//   "/auth/google",
-//   passport.authenticate("google", { scope: ["profile", "email"] })
-// );
-
-// router.get(
-//   "/auth/google/callback",
-//   passport.authenticate("google", {
-//     session: false,
-//     failureRedirect: "/login",
-//   }),
-//   googleLoginCallback
-// );
+router.post(
+  "/users/google-authenticate",
+  passport.authenticate("google-id-token", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  googleLogin
+);
 
 // ---------- User ----------
 // Todo: Get a single user
@@ -122,21 +115,5 @@ router.post(
   adminCheck,
   updateUserStatus
 );
-
-// router.put(
-//   "/:id/userInformation",
-//   passport.authenticate("jwt", { session: false }),
-//   userStatusCheck,
-//   adminCheck,
-//   assingAdmin
-// );
-
-// router.put(
-//   "/:id/userInformation",
-//   passport.authenticate("jwt", { session: false }),
-//   userStatusCheck,
-//   adminCheck,
-//   removeAdmin
-// );
 
 export default router;
