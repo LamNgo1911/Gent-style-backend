@@ -10,7 +10,7 @@ async function createCategory() {
 }
 
 //tear down
-describe("category controller test", () => {
+describe("Category controller test", () => {
   // connect database
   let mongoHelper: MongoHelper;
 
@@ -39,7 +39,7 @@ describe("category controller test", () => {
   });
 
   // Todo: Get a single category
-  it("should delete a category", async () => {
+  it("should get a single a category", async () => {
     // create new category
     const newCategory = await createCategory();
 
@@ -56,7 +56,7 @@ describe("category controller test", () => {
   });
 
   // Todo: Update a category
-  it("should delete a category", async () => {
+  it("should update a category", async () => {
     // create new category
     const newCategory = await createCategory();
 

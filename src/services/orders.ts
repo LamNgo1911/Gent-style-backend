@@ -25,7 +25,9 @@ const getOrderById = async (
 const getAllOrdersByUserId = async (
   userId: string
 ): Promise<OrderDocument[]> => {
-  const orders: OrderDocument[] = await Order.find({ userId: userId });
+  const orders: OrderDocument[] = await Order.find({ userId: userId }).populate(
+    "orderItems.product"
+  );
   if (orders.length >= 0) {
     return orders;
   }
@@ -47,7 +49,7 @@ const updateOrder = async (
 ) => {
   const updatedOrder = await Order.findByIdAndUpdate(id, newInformation, {
     new: true,
-  });
+  }).populate("orderItems.product");
 
   if (updatedOrder) {
     return updatedOrder;
@@ -58,7 +60,9 @@ const updateOrder = async (
 
 // Todo: Delete an order by admin
 const deleteOrderById = async (id: string) => {
-  const foundOrder = await Order.findByIdAndDelete(id);
+  const foundOrder = await Order.findByIdAndDelete(id).populate(
+    "orderItems.product"
+  );
   if (foundOrder) {
     return foundOrder;
   }

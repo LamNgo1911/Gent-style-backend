@@ -20,9 +20,7 @@ const getAllProducts = async (
 };
 
 // Todo: Get a single product
-const getSingleProduct = async (
-  id: string
-): Promise<ProductDocument | undefined> => {
+const getSingleProduct = async (id: string): Promise<ProductDocument> => {
   const product = await Product.findById(id).populate("category");
 
   if (!product) {

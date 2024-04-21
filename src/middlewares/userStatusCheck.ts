@@ -6,7 +6,7 @@ import { UserStatus } from "../misc/types";
 
 const userStatusCheck = (
   request: Request,
-  response: Response,
+  _: Response,
   next: NextFunction
 ) => {
   const userInformation = request.user as UserDocument;

@@ -38,7 +38,8 @@
     "start": "node ts-node server.ts",
     "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
     "build": "tsc -p .",
-    "test": "jest --runInBand --forceExit --detectOpenHandles --coverage  --verbose false"
+    "test": "jest --runInBand --forceExit --detectOpenHandles --coverage  --verbose false",
+    "testEach": "jest --runInBand --forceExit --detectOpenHandles --coverage --verbose false --testPathPattern='imageUpload.spec.ts'"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
