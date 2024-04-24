@@ -2,6 +2,8 @@ import mongoose, { Document, Model } from "mongoose";
 import bcrypt from "bcrypt";
 
 import { Role, User, UserStatus } from "../misc/types";
+import { CartItemSchema } from "./CartItem";
+import { OrderSchema } from "./Order";
 
 const Schema = mongoose.Schema;
 
@@ -66,6 +68,12 @@ const UserSchema = new Schema<UserDocument>(
       {
         type: Schema.Types.ObjectId,
         ref: "Order",
+      },
+    ],
+    cartItems: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "CartItem",
       },
     ],
   },

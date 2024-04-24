@@ -2,11 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 import ordersService from "../services/orders";
 import Order from "../models/Order";
-import {
-  BadRequestError,
-  InternalServerError,
-  NotFoundError,
-} from "../errors/ApiError";
+import { BadRequestError } from "../errors/ApiError";
 import { UserDocument } from "../models/User";
 
 // ------------ User ------------

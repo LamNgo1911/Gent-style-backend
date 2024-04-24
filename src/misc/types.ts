@@ -31,7 +31,8 @@ export type User = UserToRegister & {
   resetToken: string | null;
   resetTokenExpiresAt: Date | null;
   shippingAddress: ShippingAddress;
-  orders: Order[];
+  orders: Types.ObjectId[];
+  cartItems: Types.ObjectId[];
 };
 
 // --------- Category ---------
@@ -65,6 +66,16 @@ export type Product = {
   images: string[];
 };
 
+// --------- Cart ---------
+export type CartItem = {
+  userId: Types.ObjectId;
+  product: Types.ObjectId;
+  color: string;
+  size: string;
+  image: string;
+  quantity: number;
+};
+
 // --------- Order ---------
 export enum OrderStatus {
   PAID = "PAID",
@@ -79,16 +90,11 @@ export type Shipment = ShippingAddress & {
   trackingNumber: string;
 };
 
-export type OrderItem = {
-  quantity: number;
-  product: Types.ObjectId;
-};
-
 export type Order = {
   userId: Types.ObjectId;
   shipment: Shipment;
   priceSum: number;
-  orderItems: OrderItem[];
+  orderItems: CartItem[];
   status: OrderStatus;
 };
 
@@ -106,5 +112,6 @@ export type loginPayload = {
 // --------- Query ---------
 
 export type SortOptions = {
-  [key: string]: { [key: string]: number };
+  createdAt: number;
+  price: number;
 };

@@ -3,7 +3,7 @@ import path from "path";
 
 import app from "../../src/app";
 import connect, { MongoHelper } from "../db-helper";
-import { createCategory, createUser, getToken } from "../commonUse";
+import { createCategory, createUser, getAccess_token } from "../commonUse";
 import { CategoryDocument } from "../../src/models/Category";
 
 export const filePath = path.resolve(__dirname, "sample-asset", "image.png");
@@ -11,7 +11,7 @@ export const filePath = path.resolve(__dirname, "sample-asset", "image.png");
 describe("Order controller test", () => {
   let mongoHelper: MongoHelper;
   let agent: request.SuperTest<request.Test>;
-  let token: string;
+  let access_token: string;
   const requestBody = {
     name: "Test Order",
   };
@@ -23,10 +23,13 @@ describe("Order controller test", () => {
     agent = request(app) as unknown as SuperTest<Test>;
     userinfo = await createUser("user1@gmail.com", "123lam", "ADMIN", "Lam");
 
-    const userData = await getToken(userinfo.body.newUser.email, "123lam");
-    token = userData.body.token;
+    const userData = await getAccess_token(
+      userinfo.body.newUser.email,
+      "123lam"
+    );
+    access_token = userData.body.access_token;
 
-    newCategory = (await createCategory("Jacket", filePath, token)).body
+    newCategory = (await createCategory("Jacket", filePath, access_token)).body
       .newCategory;
   });
 
@@ -35,10 +38,10 @@ describe("Order controller test", () => {
     await mongoHelper.closeDatabase();
   });
 
-  it("should create a new order if role is user and has valid token", async () => {
+  it("should create a new order if role is user and has valid access_token", async () => {
     const productResponse: Response = await agent
       .post("/api/v1/products")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${access_token}`)
       .field("name", "product2")
       .field("price", "10")
       .field("description", "Haha")
@@ -74,7 +77,7 @@ describe("Order controller test", () => {
     // Call the createOrder endpoint
     const response = await agent
       .post("/api/v1/orders")
-      .set("Authorization", "Bearer " + token)
+      .set("Authorization", "Bearer " + access_token)
       .send(orderData);
 
     // Assertions
@@ -84,7 +87,7 @@ describe("Order controller test", () => {
   it("should get a single order", async () => {
     const productResponse: Response = await agent
       .post("/api/v1/products")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${access_token}`)
       .field("name", "product2")
       .field("price", "10")
       .field("description", "Haha")
@@ -119,12 +122,12 @@ describe("Order controller test", () => {
 
     const createOrderRes = await agent
       .post("/api/v1/orders")
-      .set("Authorization", "Bearer " + token)
+      .set("Authorization", "Bearer " + access_token)
       .send(orderData);
     // Call the getSingleOrder endpoint
     const response = await agent
       .get(`/api/v1/orders/${createOrderRes.body.newOrder._id}`)
-      .set("Authorization", "Bearer " + token);
+      .set("Authorization", "Bearer " + access_token);
 
     // Assertions
     expect(response.status).toBe(200);
@@ -134,7 +137,7 @@ describe("Order controller test", () => {
     // Call the getAllOrders endpoint
     const response = await agent
       .get("/api/v1/orders")
-      .set("Authorization", "Bearer " + token);
+      .set("Authorization", "Bearer " + access_token);
 
     // Assertions
     expect(response.status).toBe(200);

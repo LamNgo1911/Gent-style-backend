@@ -17,7 +17,7 @@ export async function createUser(
   return await request(app).post("/api/v1/users/register").send(data);
 }
 
-export async function getToken(email: string, password: string) {
+export async function getAccess_token(email: string, password: string) {
   return await request(app)
     .post("/api/v1/users/login")
     .send({ email: email, password: password });

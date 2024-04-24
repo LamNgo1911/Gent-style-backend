@@ -1,23 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { Order, OrderItem, OrderStatus } from "../misc/types";
+import { Order, OrderStatus } from "../misc/types";
+import { CartItemSchema } from "./CartItem";
 
 export type OrderDocument = Document & Order;
 
-export type OrderItemDocument = Document & OrderItem;
-
-const OrderItemSchema = new Schema<OrderItemDocument>({
-  quantity: {
-    type: Number,
-    required: true,
-  },
-  product: {
-    type: Schema.Types.ObjectId,
-    ref: "Product",
-    required: true,
-  },
-});
-
-const OrderSchema = new Schema<OrderDocument>(
+export const OrderSchema = new Schema<OrderDocument>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -60,7 +47,11 @@ const OrderSchema = new Schema<OrderDocument>(
       type: Number,
       required: true,
     },
-    orderItems: [OrderItemSchema],
+    orderItems: [
+      {
+        type: CartItemSchema,
+      },
+    ],
     status: {
       type: String,
       enum: Object.values(OrderStatus),

@@ -1,15 +1,18 @@
-import { FilterQuery } from "mongoose";
+import { FilterQuery, SortOrder } from "mongoose";
 
 import { BadRequestError, NotFoundError } from "../errors/ApiError";
 import Product, { ProductDocument } from "../models/Product";
+import { SortOptions } from "../misc/types";
 
 // Todo: Get all products
 const getAllProducts = async (
   query: FilterQuery<ProductDocument>,
+  sortQuery: { [key: string]: SortOrder },
   skip: number,
   limit: number
 ): Promise<[ProductDocument[], number]> => {
   const products = await Product.find(query)
+    .sort(sortQuery)
     .skip(skip)
     .limit(limit)
     .populate("category");

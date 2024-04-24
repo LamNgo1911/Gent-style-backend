@@ -34,7 +34,7 @@ router.get(
 
 // Todo: Get all orders by userId
 router.get(
-  "/users/:userId",
+  "/users",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   getAllOrdersByUserId

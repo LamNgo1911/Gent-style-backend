@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { FilterQuery } from "mongoose";
+import { FilterQuery, SortOrder } from "mongoose";
 
 import Product from "../models/Product";
 import productsService from "../services/products";
 import { ProductDocument } from "../models/Product";
 import { BadRequestError } from "../errors/ApiError";
 import Category from "../models/Category";
-import { SortOptions, Variant } from "../misc/types";
 import { uploadImages } from "../utils/imageUpload";
 
 // Todo: Get all products
@@ -16,37 +15,28 @@ export async function getAllProducts(
   next: NextFunction
 ) {
   try {
-    const page = Number(request.query?.page) || 1;
     const limit = Number(request.query?.limit) || 8;
-    const {
-      sort,
-      category,
-      priceOption,
-      lowestPrice,
-      highestPrice,
-      size,
-      color,
-      search,
-    } = request.query;
+    const skip = Number(request.query?.skip) || 0;
+    const priceMin = Number(request.query?.priceMin);
+    const priceMax = Number(request.query?.priceMax);
+    const { sort, category, size, color, search } = request.query;
 
-    const skip = (page - 1) * limit;
     const query: FilterQuery<ProductDocument> = {};
+    const sortQuery: { [key: string]: SortOrder } = {};
 
     // Todo: sort products
-    const sortOptions: SortOptions = {
-      "Latest added": { createdAt: -1 },
-      "Most relevant": { createdAt: -1 },
-      "Lowest price": { price: 1 },
-      "Highest price": { price: -1 },
-      "Top reviews": { averageRating: -1 },
-    };
-
-    if (sort && sortOptions[sort as keyof SortOptions]) {
-      query.sort = sortOptions[sort as keyof SortOptions];
+    if (sort === "Latest added") {
+      sortQuery.createdAt = -1;
+    } else if (sort === "Most relevant") {
+      sortQuery.createdAt = 1;
+    } else if (sort === "Lowest price") {
+      sortQuery.price = 1;
+    } else if (sort === "Highest price") {
+      sortQuery.price = -1;
     }
 
     // Todo: Filter products by category
-    if (category && category !== "All category" && category !== "All") {
+    if (category && category !== "All") {
       const cate = await Category.findOne({ name: category });
       if (cate) {
         query.category = cate._id;
@@ -54,14 +44,12 @@ export async function getAllProducts(
     }
 
     // Todo:  Filter products by price
-    if (priceOption === "Custom") {
-      if (lowestPrice && highestPrice) {
-        query.price = { $gte: lowestPrice, $lte: highestPrice };
-      } else if (lowestPrice) {
-        query.price = { $gte: lowestPrice };
-      } else if (highestPrice) {
-        query.price = { $lte: highestPrice };
-      }
+    if (priceMin && priceMax) {
+      query.price = { $gte: priceMin, $lte: priceMax };
+    } else if (priceMin) {
+      query.price = { $gte: priceMin };
+    } else if (priceMax) {
+      query.price = { $lte: priceMax };
     }
 
     // Todo: Filter products by size and color
@@ -83,6 +71,7 @@ export async function getAllProducts(
 
     const [products, count] = await productsService.getAllProducts(
       query,
+      sortQuery,
       skip,
       limit
     );
@@ -122,8 +111,8 @@ export async function createProduct(
 ) {
   try {
     const { name, price, description, category, variants } = request.body;
-    const files = request.files as Express.Multer.File[];
 
+    const files = request.files as Express.Multer.File[];
     if (
       !name ||
       !price ||
@@ -135,7 +124,6 @@ export async function createProduct(
     ) {
       throw new BadRequestError("Please fill out all fields!");
     }
-
     const checkedCategory = await Category.findOne({ _id: category });
 
     if (!checkedCategory) {

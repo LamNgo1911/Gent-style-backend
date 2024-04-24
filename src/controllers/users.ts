@@ -63,6 +63,7 @@ export async function loginUser(
     }
 
     const user = await userService.getUserByEmail(email);
+
     const hashedPassword = user.password;
 
     const isPasswordCorrect = await bcrypt.compare(password, hashedPassword);
@@ -80,17 +81,9 @@ export async function loginUser(
     const token = generateToken(user, "1d");
     const refreshToken = generateToken(user, "20d");
 
-    const userInfo = {
-      _id: user._id,
-      email: user.email,
-      username: user.username,
-      role: user.role,
-      id: user.id,
-    };
-
     response
       .status(200)
-      .json({ token: token, refreshToken: refreshToken, user: userInfo });
+      .json({ access_token: token, refresh_token: refreshToken, user });
   } catch (error) {
     next(error);
   }
@@ -238,6 +231,7 @@ export async function updateUser(
   try {
     const id = request.params.id;
     const { username, email } = request.body;
+    const access_token = request.headers.authorization?.split(" ")[1];
 
     if (!id) {
       throw new BadRequestError("Please provide userId!");
@@ -249,7 +243,7 @@ export async function updateUser(
 
     const updateUser = await userService.updateUser(id, { username, email });
 
-    response.status(200).json(updateUser);
+    response.status(200).json({ user: updateUser, access_token });
   } catch (error) {
     next(error);
   }
@@ -264,6 +258,7 @@ export async function updatePassword(
   try {
     const id = request.params.id;
     const { oldPassword, newPassword } = request.body;
+    const access_token = request.headers.authorization?.split(" ")[1];
 
     if (!id) {
       throw new BadRequestError("Please provide userId!");
@@ -285,7 +280,7 @@ export async function updatePassword(
 
     const user = await userService.updatePassword(userData, newPassword);
 
-    response.status(200).send({ user, message: "User updated!" });
+    response.status(200).send({ user, access_token });
   } catch (error) {
     next(error);
   }
@@ -306,7 +301,7 @@ export async function deleteUser(
 
     const user = await userService.deleteUser(id);
 
-    response.status(200).json({ user, message: "User has been deleted" });
+    response.status(200).json({ user });
   } catch (error) {
     next(error);
   }
@@ -342,9 +337,12 @@ export async function googleLogin(
   try {
     // logic
     const userGoogleData = request.user as UserDocument;
-    const token = generateToken(userGoogleData, "1h");
+    const token = generateToken(userGoogleData, "11");
+    const refresh_token = generateToken(userGoogleData, "20d");
 
-    response.status(200).json({ token, userGoogleData });
+    response
+      .status(200)
+      .json({ access_token: token, refresh_token, user: userGoogleData });
   } catch (error) {
     next(error);
   }

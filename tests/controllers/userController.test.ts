@@ -2,11 +2,11 @@ import request from "supertest";
 
 import app from "../../src/app";
 import connect, { MongoHelper } from "../db-helper";
-import { createUser, getToken } from "../commonUse";
+import { createUser, getAccess_token } from "../commonUse";
 
 describe("User controller test", () => {
   let mongoHelper: MongoHelper;
-  let token: string;
+  let access_token: string;
 
   beforeAll(async () => {
     mongoHelper = await connect();
@@ -35,7 +35,7 @@ describe("User controller test", () => {
     expect(response.status).toBe(201);
   });
 
-  it("should login and return a token", async () => {
+  it("should login and return a access_token", async () => {
     const userinfo = await createUser(
       "user1@gmail.com",
       "123lam",
@@ -76,16 +76,16 @@ describe("User controller test", () => {
   //   );
 
   //   const res = await sendVerification(userinfo.body.newUser.email);
-  //   console.log(res.body.resetToken);
+  //   console.log(res.body.resetAccess_token);
   //   const response = await request(app)
-  //     .post(`/api/v1/users/reset-password?resetToken=${res.body.resetToken}`)
+  //     .post(`/api/v1/users/reset-password?resetAccess_token=${res.body.resetAccess_token}`)
   //     .send({ newPassword: "lamngo123" });
 
   //   // Assertions
   //   expect(response.status).toBe(200);
   // });
 
-  it("should get all user if the role is admin and has valid token", async () => {
+  it("should get all user if the role is admin and has valid access_token", async () => {
     const userinfo = await createUser(
       "user1@gmail.com",
       "123lam",
@@ -93,18 +93,21 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.newUser.email, "123lam");
-    token = userData.body.token;
+    const userData = await getAccess_token(
+      userinfo.body.newUser.email,
+      "123lam"
+    );
+    access_token = userData.body.access_token;
 
     const response = await request(app)
       .get(`/api/v1/admin/users`)
-      .set("Authorization", "Bearer " + token);
+      .set("Authorization", "Bearer " + access_token);
 
     // Assertions
     expect(response.status).toBe(200);
   });
 
-  it("should get all user if the role is admin and has valid token", async () => {
+  it("should get all user if the role is admin and has valid access_token", async () => {
     const userinfo = await createUser(
       "user1@gmail.com",
       "123lam",
@@ -112,12 +115,15 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.newUser.email, "123lam");
-    token = userData.body.token;
+    const userData = await getAccess_token(
+      userinfo.body.newUser.email,
+      "123lam"
+    );
+    access_token = userData.body.access_token;
 
     const response = await request(app)
       .get(`/api/v1/admin/users/${userinfo.body.newUser._id}`)
-      .set("Authorization", "Bearer " + token);
+      .set("Authorization", "Bearer " + access_token);
 
     // Assertions
     expect(response.status).toBe(200);
@@ -131,8 +137,11 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userData = await getToken(userinfo.body.newUser.email, "123lam");
-    token = userData.body.token;
+    const userData = await getAccess_token(
+      userinfo.body.newUser.email,
+      "123lam"
+    );
+    access_token = userData.body.access_token;
 
     const newUserInfo = {
       username: "lala",
@@ -141,7 +150,7 @@ describe("User controller test", () => {
 
     const response = await request(app)
       .put(`/api/v1/admin/users/${userinfo.body.newUser._id}`)
-      .set("Authorization", "Bearer " + token)
+      .set("Authorization", "Bearer " + access_token)
       .send(newUserInfo);
 
     // Assertions
@@ -156,11 +165,11 @@ describe("User controller test", () => {
       "Lam"
     );
 
-    const userAdmin = await getToken(
+    const userAdmin = await getAccess_token(
       userinfoAdmin.body.newUser.email,
       "123lam"
     );
-    token = userAdmin.body.token;
+    access_token = userAdmin.body.access_token;
 
     const userinfo1 = await createUser(
       "user2@gmail.com",
@@ -171,7 +180,7 @@ describe("User controller test", () => {
 
     const response = await request(app)
       .post(`/api/v1/admin/users/change-status`)
-      .set("Authorization", "Bearer " + token)
+      .set("Authorization", "Bearer " + access_token)
       .send({ userId: userinfo1.body.newUser._id, status: "DISABLED" });
 
     // Assertions

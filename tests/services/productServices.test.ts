@@ -43,7 +43,12 @@ describe("Product controller test", () => {
   // test suit
   // Todo: Get all products
   it("should return list of products", async () => {
-    const [products, count] = await productService.getAllProducts({}, 0, 10);
+    const [products, count] = await productService.getAllProducts(
+      {},
+      { createdAt: 1 },
+      0,
+      10
+    );
 
     expect(products.length).toEqual(1);
     expect(products[0]).toHaveProperty("name");
