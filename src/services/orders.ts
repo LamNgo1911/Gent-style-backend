@@ -23,11 +23,15 @@ const getOrderById = async (
 
 // Todo: Get all orders of an user
 const getAllOrdersByUserId = async (
-  userId: string
+  userId: string,
+  skip: number,
+  limit: number
 ): Promise<OrderDocument[]> => {
-  const orders: OrderDocument[] = await Order.find({ userId: userId }).populate(
-    "orderItems.product"
-  );
+  const orders: OrderDocument[] = await Order.find({ userId: userId })
+    .skip(skip)
+    .limit(limit)
+    .populate("orderItems.product");
+
   if (orders.length >= 0) {
     return orders;
   }

@@ -2,7 +2,6 @@ import { FilterQuery, SortOrder } from "mongoose";
 
 import { BadRequestError, NotFoundError } from "../errors/ApiError";
 import Product, { ProductDocument } from "../models/Product";
-import { SortOptions } from "../misc/types";
 
 // Todo: Get all products
 const getAllProducts = async (

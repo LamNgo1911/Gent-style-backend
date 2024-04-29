@@ -24,20 +24,20 @@ router.post(
   createOrder
 );
 
-// Todo: Get an order by id
-router.get(
-  "/:orderId",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  getOrderById
-);
-
 // Todo: Get all orders by userId
 router.get(
   "/users",
   passport.authenticate("jwt", { session: false }),
   userStatusCheck,
   getAllOrdersByUserId
+);
+
+// Todo: Get an order by id
+router.get(
+  "/:orderId",
+  passport.authenticate("jwt", { session: false }),
+  userStatusCheck,
+  getOrderById
 );
 
 // ------------- Admin -------------

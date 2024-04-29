@@ -1,11 +1,18 @@
 import { NextFunction, Request, Response } from "express";
 
 import ordersService from "../services/orders";
-import Order from "../models/Order";
+import Order, { OrderDocument } from "../models/Order";
 import { BadRequestError } from "../errors/ApiError";
 import { UserDocument } from "../models/User";
+import { CartItem, Variant } from "../misc/types";
+import Product, { ProductDocument } from "../models/Product";
+import cartItemService from "../services/cartItems";
 
 // ------------ User ------------
+
+const stripe = require("stripe")(
+  "sk_test_51MJsP5KH2yzWbNLaJ2bUYxBoR63ltS2lAPznNQKkuxHBpgL3o8TC1NodcVMqBXKkjoRNTVX8QiQcJhS4D1mlPFYv00HoOW9iPM"
+);
 
 // Todo: Create a new order
 export async function createOrder(
@@ -15,9 +22,9 @@ export async function createOrder(
 ) {
   try {
     const userInformation = request.user as UserDocument;
-    const { shipment, priceSum, orderItems } = request.body;
+    const { shipment, priceSum, orderItems, clientSecret } = request.body;
 
-    if (!shipment || !priceSum || orderItems.length === 0) {
+    if (!shipment || !priceSum || !clientSecret || orderItems.length === 0) {
       throw new BadRequestError(`Please provide order information!`);
     }
 
@@ -25,8 +32,10 @@ export async function createOrder(
       userId: userInformation._id,
       shipment,
       priceSum,
+      clientSecret,
       orderItems,
     });
+
     const newOrder = await ordersService.createOrder(data);
 
     response.status(201).json({ newOrder });
@@ -67,11 +76,19 @@ export async function getAllOrdersByUserId(
 ) {
   try {
     const userInformation = request.user as UserDocument;
+    const page = Number(request.query.page) || 1;
+    const limit = Number(request.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const count = await Order.countDocuments({});
+
     const orders = await ordersService.getAllOrdersByUserId(
-      userInformation._id
+      userInformation._id,
+      skip,
+      limit
     );
 
-    response.status(200).json({ orders });
+    response.status(200).json({ orders, count });
   } catch (error) {
     next(error);
   }

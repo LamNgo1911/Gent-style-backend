@@ -26,7 +26,10 @@ describe("Category controller test", () => {
       "Lam"
     );
 
-    const userData = await getAccess_token(userinfo.body.newUser.email, "123lam");
+    const userData = await getAccess_token(
+      userinfo.body.newUser.email,
+      "123lam"
+    );
     access_token = userData.body.access_token;
 
     res = await createCategory(requestBody.name, filePath, access_token);
@@ -39,7 +42,7 @@ describe("Category controller test", () => {
 
   it("should create a new category if role is admin and has valid access_token", async () => {
     // Call the createCategory endpoint
-    const response = await agent
+    const response = await request(app)
       .post("/api/v1/categories")
       .set("Authorization", "Bearer " + access_token)
       .field("name", requestBody.name)

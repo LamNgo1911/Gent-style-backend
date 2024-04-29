@@ -7,6 +7,7 @@ import orderService from "../../src/services/orders";
 import Category from "../../src/models/Category";
 import Order, { OrderDocument } from "../../src/models/Order";
 import User, { UserDocument } from "../../src/models/User";
+import CartItem from "../../src/models/CartItem";
 
 //tear down
 describe("Order controller test", () => {
@@ -49,6 +50,20 @@ describe("Order controller test", () => {
 
     newProduct = await productService.createProduct(product);
 
+    const cartItemData = {
+      userId: newUser._id,
+      product: newProduct._id,
+      color: "NONE",
+      size: "S",
+      image:
+        "https://res.cloudinary.com/do4deaika/image/upload/v1713781170/qgwex0gd8p8purwltx3r.jpg",
+      quantity: 2,
+      imageAnalysis:
+        "The image appears to be a white jacket with a floral pattern, possibly a dress or a coat. The jacket is hanging on a wooden hanger, and there is a bird perched on the hanger. The bird is likely a symbol of freedom or a representation of the jacket's design. The image is likely a fashion or lifestyle photo, and the bird adds a touch of whimsy to the scene.",
+    };
+
+    const newCartItem = new CartItem(cartItemData);
+
     const orderData = {
       userId: newUser._id,
       shipment: {
@@ -63,12 +78,7 @@ describe("Order controller test", () => {
         },
       },
       priceSum: 100.0,
-      orderItems: [
-        {
-          quantity: 2,
-          product: newProduct._id,
-        },
-      ],
+      orderItems: [newCartItem],
       status: "PAID",
     };
 
