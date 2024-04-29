@@ -2,6 +2,8 @@
 
 - This is the backend server for an e-commerce website built using Node.js, TypeScript, Express.js, and MongoDB. It provides the API endpoints and handles the business logic for managing users, categories, products, cart items, and orders.
 
+- Backend deployed link: https://gent-style-backend.onrender.com
+
 ## Table of Contents
 
 - Features
