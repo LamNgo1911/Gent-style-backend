@@ -29,6 +29,7 @@
     "passport-google-id-token": "^0.4.7",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "stripe": "^15.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
     "uuid": "^9.0.1",
@@ -39,7 +40,7 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/server.ts",
     "build": "tsc -p .",
     "test": "jest --runInBand --forceExit --detectOpenHandles --coverage  --verbose false",
-    "testEach": "jest --runInBand --forceExit --detectOpenHandles --coverage --verbose false --testPathPattern='productServices.test.ts'"
+    "testEach": "jest --runInBand --forceExit --detectOpenHandles --coverage --verbose false --testPathPattern='categoryController.test.ts'"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

@@ -94,6 +94,7 @@ export type Order = {
   userId: Types.ObjectId;
   shipment: Shipment;
   priceSum: number;
+  clientSecret: string;
   orderItems: CartItem[];
   status: OrderStatus;
 };

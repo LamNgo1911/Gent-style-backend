@@ -47,6 +47,10 @@ export const OrderSchema = new Schema<OrderDocument>(
       type: Number,
       required: true,
     },
+    clientSecret: {
+      type: String,
+      required: [true, "Please add clientSecret"],
+    },
     orderItems: [
       {
         type: CartItemSchema,
