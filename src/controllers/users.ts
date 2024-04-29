@@ -337,7 +337,7 @@ export async function googleLogin(
   try {
     // logic
     const userGoogleData = request.user as UserDocument;
-    const token = generateToken(userGoogleData, "11");
+    const token = generateToken(userGoogleData, "1d");
     const refresh_token = generateToken(userGoogleData, "20d");
 
     response
