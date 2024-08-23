@@ -60,7 +60,7 @@ export async function getOrderById(
 
     const foundOrder = await ordersService.getOrderById(
       orderId,
-      userInformation._id
+      userInformation._id as string
     );
     response.status(200).json({ order: foundOrder });
   } catch (error) {
@@ -83,7 +83,7 @@ export async function getAllOrdersByUserId(
     const count = await Order.countDocuments({});
 
     const orders = await ordersService.getAllOrdersByUserId(
-      userInformation._id,
+      userInformation._id as string,
       skip,
       limit
     );

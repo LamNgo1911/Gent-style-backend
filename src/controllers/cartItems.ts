@@ -14,7 +14,7 @@ export async function getAllCartItemsByUserId(
   try {
     const userInformation = request.user as UserDocument;
     const cartItems = await cartItemService.getAllCartItemsByUserId(
-      userInformation._id
+      userInformation._id as string
     );
 
     response.status(200).json({ cartItems, count: cartItems.length });
@@ -39,7 +39,7 @@ export async function getSingleCartItem(
 
     const cartItem = await cartItemService.getSingleCartItem(
       id,
-      userInformation._id
+      userInformation._id as string
     );
 
     response.status(200).json({ cartItem });
@@ -100,7 +100,7 @@ export async function updateCartItem(
 
     const updateCartItem = await cartItemService.updateCartItem(
       id,
-      userInformation._id,
+      userInformation._id as string,
       quantity
     );
 
@@ -126,7 +126,7 @@ export async function deleteCartItem(
 
     const deleteCartItem = await cartItemService.deleteCartItem(
       id,
-      userInformation._id
+      userInformation._id as string
     );
 
     response.status(200).json({ cartItem: deleteCartItem });
