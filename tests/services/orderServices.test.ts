@@ -107,7 +107,7 @@ describe("Order controller test", () => {
 
   // Todo: Get all orders of an user
   it("should return all orders of an user", async () => {
-    const orders = await orderService.getAllOrdersByUserId(newUser._id);
+    const orders = await orderService.getAllOrdersByUserId(newUser._id, 3, 10);
 
     expect(orders.length).toEqual(1);
   });

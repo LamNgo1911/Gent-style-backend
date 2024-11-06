@@ -1,9 +1,7 @@
-import mongoose, { Document, Model } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import bcrypt from "bcrypt";
 
 import { Role, User, UserStatus } from "../misc/types";
-import { CartItemSchema } from "./CartItem";
-import { OrderSchema } from "./Order";
 
 const Schema = mongoose.Schema;
 
