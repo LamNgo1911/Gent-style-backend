@@ -27,7 +27,9 @@ const clientId = process.env.GOOGLE_CLIENT_ID as string;
 export const googleStrategy = new GoogleTokenStrategy(
   { clientID: clientId },
   async function (parsedToken: any, googleId: string, done: any) {
+   
     const userPayload = {
+      username: parsedToken.payload.name,
       email: parsedToken.payload.email,
       password: generateRandomPassword(8),
     };

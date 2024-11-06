@@ -3,7 +3,9 @@
 DEADLINE: Friday 26/4
 Presentation day: 25 and 26/4
 
-## Read this section carefully.
+- Backend deployed link: https://gent-style-backend.onrender.com
+
+## Table of Contents
 
 At this point you have two repositories:
 
