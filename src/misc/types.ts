@@ -1,5 +1,3 @@
-import { Types } from "mongoose";
-
 // --------- User ---------
 export enum Role {
   ADMIN = "ADMIN",
@@ -26,13 +24,16 @@ export type UserToRegister = {
 };
 
 export type User = UserToRegister & {
+  userId: string;
   role: Role;
   status: UserStatus;
-  resetToken: string | null;
-  resetTokenExpiresAt: Date | null;
-  shippingAddress: ShippingAddress;
-  orders: Types.ObjectId[];
-  cartItems: Types.ObjectId[];
+  resetToken?: string | null;
+  resetTokenExpiresAt?: string | null;
+  shippingAddress?: ShippingAddress | null;
+  orders?: string[] | null;
+  cartItems?: string[] | null;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // --------- Category ---------
@@ -61,15 +62,15 @@ export type Product = {
   name: string;
   price: number;
   description: string;
-  category: Types.ObjectId;
+  category: string;
   variants: Variant[];
   images: string[];
 };
 
 // --------- Cart ---------
 export type CartItem = {
-  userId: Types.ObjectId;
-  product: Types.ObjectId;
+  userId: string;
+  product: string;
   color: string;
   size: string;
   image: string;
@@ -91,7 +92,7 @@ export type Shipment = ShippingAddress & {
 };
 
 export type Order = {
-  userId: Types.ObjectId;
+  userId: string;
   shipment: Shipment;
   priceSum: number;
   clientSecret: string;

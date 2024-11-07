@@ -1,30 +1,56 @@
 import nodemailer from "nodemailer";
-import { FilterQuery, UpdateQuery } from "mongoose";
+import { FilterQuery } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcryptjs";
 
-import User, { UserDocument } from "../models/User";
 import { NotFoundError, ConflictError } from "../errors/ApiError";
+import { User, UserToRegister } from "../misc/types";
+import { dynamoDB } from "../config/aws-dynamoDB";
 
 // Todo: Create a new user
-const createUser = async (user: UserDocument): Promise<UserDocument> => {
-  const { email } = user;
-
-  const isEmailAlreadyAdded = await User.findOne({ email });
+const createUser = async (userInput: UserToRegister): Promise<User> => {
+  const { email } = userInput;
+  const user = { ...userInput } as User;
+  const isEmailAlreadyAdded = await getUserByEmail(email!);
 
   if (isEmailAlreadyAdded) {
     throw new ConflictError("Email already exists.");
   }
 
-  return await user.save();
+  user.userId = uuidv4();
+  if (user.password) {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+  }
+  user.createdAt = new Date().toISOString();
+  user.updatedAt = new Date().toISOString();
+
+  const params = {
+    TableName: "Users",
+    Item: user,
+  };
+
+  await dynamoDB.put(params).promise();
+  return user as User;
 };
 
 // Todo: Get a user by email
-const getUserByEmail = async (email: string): Promise<UserDocument> => {
-  const user = await User.findOne({ email });
+const getUserByEmail = async (email: string): Promise<User> => {
+  const params = {
+    TableName: "Users",
+    IndexName: "EmailIndex", // Assuming you have a secondary index on email
+    KeyConditionExpression: "email = :email",
+    ExpressionAttributeValues: {
+      ":email": email,
+    },
+  };
 
-  if (!user) {
-    throw new NotFoundError(`Invalid credentials!`);
+  const result = await dynamoDB.query(params).promise();
+  if (!result.Items) {
+    throw new NotFoundError(`User Not Found with ${email}`);
   }
 
+  const user = result.Items[0] as User;
   return user;
 };
 
@@ -55,9 +81,7 @@ const sendVerificationEmail = async (
 };
 
 // Todo: Get reset password token
-const getUserByResetToken = async (
-  resetToken: string
-): Promise<UserDocument> => {
+const getUserByResetToken = async (resetToken: string): Promise<User> => {
   const user = await User.findOne({ resetToken });
 
   if (!user) {
@@ -69,9 +93,9 @@ const getUserByResetToken = async (
 
 // Todo: Update password
 const updatePassword = async (
-  user: UserDocument,
+  user: User,
   newPassword: string
-): Promise<UserDocument> => {
+): Promise<User> => {
   user.password = newPassword;
   user.resetToken = null;
   user.resetTokenExpiresAt = null;
@@ -83,16 +107,16 @@ const updatePassword = async (
 
 // Todo: Get all users
 const getAllUsers = async function getUsers(
-  query: FilterQuery<UserDocument>,
+  query: FilterQuery<User>,
   sort: string,
   skip: number,
   limit: number
-): Promise<UserDocument[]> {
+): Promise<User[]> {
   return await User.find(query).skip(skip).limit(limit).sort(sort).lean();
 };
 
 // Todo: Get a single user
-const getSingleUser = async (id: string): Promise<UserDocument> => {
+const getSingleUser = async (id: string): Promise<User> => {
   const user = await User.findById(id);
 
   if (!user) {
@@ -103,7 +127,7 @@ const getSingleUser = async (id: string): Promise<UserDocument> => {
 };
 
 // Todo: Update a user
-const updateUser = async (id: string, updateData: Partial<UserDocument>) => {
+const updateUser = async (id: string, updateData: Partial<User>) => {
   const options = { new: true, runValidators: true };
   const updateUser = await User.findByIdAndUpdate(id, updateData, options);
 
@@ -139,7 +163,7 @@ const updateUserStatus = async (userId: string, status: string) => {
 };
 
 // Todo: Find or create user
-const findOrCreate = async (payload: Partial<UserDocument>) => {
+const findOrCreate = async (payload: Partial<User>) => {
   const user = await User.findOne({ email: payload.email });
   if (user) {
     return user;
