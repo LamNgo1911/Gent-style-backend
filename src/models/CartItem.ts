@@ -6,16 +6,16 @@ export type CartItemDocument = Document & CartItem;
 
 export const CartItemSchema = new Schema<CartItemDocument>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    product: {
-      type: Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
+    // userId: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
+    // product: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Product",
+    //   required: true,
+    // },
     color: {
       type: String,
       required: true,

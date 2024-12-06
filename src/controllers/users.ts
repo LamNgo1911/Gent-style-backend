@@ -5,12 +5,12 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
+import { Key } from "aws-sdk/clients/dynamodb";
 
 import userService from "../services/users";
-import User, { UserDocument } from "../models/User";
 import { BadRequestError, ForbiddenError } from "../errors/ApiError";
 import { baseUrl } from "../api/baseUrl";
-import { UserStatus } from "../misc/types";
+import { User, UserStatus } from "../misc/types";
 import { generateToken } from "../utils/generateToken";
 
 // Todo: Create a new user
@@ -29,14 +29,12 @@ export async function createUser(
       throw new BadRequestError("Please enter a valid email!");
     }
 
-    const user = new User({
+    const newUser = await userService.createUser({
       username,
       password,
       email,
       role,
     });
-
-    const newUser = await userService.createUser(user);
 
     response.status(201).json({ newUser });
   } catch (error) {
@@ -111,10 +109,13 @@ export async function forgotPassword(
     const verificationLink = `${baseUrl}/api/v1/users/reset-password?resetToken=${resetToken}`;
     await userService.sendVerificationEmail(email, verificationLink);
 
-    user.resetToken = resetToken;
-    user.resetTokenExpiresAt = new Date(Date.now() + 3600000);
+    const resetTokenExpiresAt = new Date(Date.now() + 3600000).toISOString();
 
-    await user.save();
+    await userService.updateUserWithResetToken(
+      user?.userId,
+      resetToken,
+      resetTokenExpiresAt
+    );
 
     response
       .status(200)
@@ -144,11 +145,15 @@ export async function resetPassword(
       throw new BadRequestError("Missing reset token expired time");
     }
 
-    if (Date.now() > userData.resetTokenExpiresAt.getTime()) {
+    if (Date.now() > new Date(userData.resetTokenExpiresAt).getTime()) {
       throw new BadRequestError("Expired reset token");
     }
 
-    const newUserData = await userService.updatePassword(userData, newPassword);
+    console.log(userData.userId, newPassword);
+    const newUserData = await userService.updatePassword(
+      userData?.userId,
+      newPassword
+    );
 
     response
       .status(200)
@@ -161,6 +166,8 @@ export async function resetPassword(
 type UserQuery = {
   filter?: string;
   search?: string;
+  limit?: string | number;
+  lastEvaluatedKey?: string;
 };
 
 // Todo: Get all users
@@ -170,12 +177,8 @@ export async function getAllUsers(
   next: NextFunction
 ) {
   try {
-    const { filter, search } = request.query as UserQuery;
-    const page = Number(request.query.page) || 1;
-    const limit = Number(request.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const query: FilterQuery<UserDocument> = {};
+    const { filter, search, limit = 2, lastEvaluatedKey } = request.query;
+    const query: any = {};
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
@@ -186,16 +189,21 @@ export async function getAllUsers(
       query.status = UserStatus.DISABLED;
     }
 
-    const count = await User.countDocuments(query);
+    // Parse lastEvaluatedKey if it exists
+    let parsedLastEvaluatedKey: Key | undefined;
+    if (typeof lastEvaluatedKey === "string") {
+      try {
+        parsedLastEvaluatedKey = JSON.parse(lastEvaluatedKey);
+      } catch (error) {
+        throw new BadRequestError("Invalid lastEvaluatedKey format");
+      }
+    }
 
-    const users = await userService.getAllUsers(
-      query,
-      "-createdAt",
-      skip,
-      limit
-    );
+    // Fetch users and pagination key
+    const { users, lastEvaluatedKey: newLastEvaluatedKey } =
+      await userService.getAllUsers(Number(limit), parsedLastEvaluatedKey);
 
-    response.status(200).json({ users, count });
+    response.status(200).json({ users, lastEvaluatedKey: newLastEvaluatedKey });
   } catch (error) {
     next(error);
   }
@@ -278,7 +286,7 @@ export async function updatePassword(
       throw new BadRequestError("Wrong password!");
     }
 
-    const user = await userService.updatePassword(userData, newPassword);
+    const user = await userService.updatePassword(userData.userId, newPassword);
 
     response.status(200).send({ user, access_token });
   } catch (error) {
@@ -336,7 +344,7 @@ export async function googleLogin(
 ) {
   try {
     // logic
-    const userGoogleData = request.user as UserDocument;
+    const userGoogleData = request.user as User;
     const token = generateToken(userGoogleData, "1d");
     const refresh_token = generateToken(userGoogleData, "20d");
 

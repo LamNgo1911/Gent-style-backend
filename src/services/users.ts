@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcryptjs";
 
 import { NotFoundError, ConflictError } from "../errors/ApiError";
-import { User, UserToRegister } from "../misc/types";
+import { Role, User, UserStatus, UserToRegister } from "../misc/types";
 import { dynamoDB } from "../config/aws-dynamoDB";
 
 // Todo: Create a new user
@@ -82,99 +82,214 @@ const sendVerificationEmail = async (
 
 // Todo: Get reset password token
 const getUserByResetToken = async (resetToken: string): Promise<User> => {
-  const user = await User.findOne({ resetToken });
+  const params = {
+    TableName: "Users",
+    IndexName: "ResetTokenIndex", // Assuming you have a secondary index on resetToken
+    KeyConditionExpression: "resetToken = :resetToken",
+    ExpressionAttributeValues: {
+      ":resetToken": resetToken,
+    },
+  };
 
-  if (!user) {
+  const result = await dynamoDB.query(params).promise();
+  if (!result.Items || result.Items.length === 0) {
     throw new NotFoundError(`User Not Found with ${resetToken}`);
   }
 
-  return user;
+  return result.Items[0] as User;
 };
 
 // Todo: Update password
 const updatePassword = async (
-  user: User,
+  userId: string,
   newPassword: string
 ): Promise<User> => {
-  user.password = newPassword;
-  user.resetToken = null;
-  user.resetTokenExpiresAt = null;
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-  await user.save();
+  const updateExpression = `set password = :password`;
+  const expressionAttributeValues: { [key: string]: any } = {
+    ":password": hashedPassword,
+  };
 
-  return user;
+  // Use REMOVE clause to remove resetToken and resetTokenExpiresAt if they are null
+  const removeExpression = `remove resetToken, resetTokenExpiresAt`;
+
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+    UpdateExpression: `${updateExpression} ${removeExpression}`,
+    ExpressionAttributeValues: expressionAttributeValues,
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await dynamoDB.update(params).promise();
+  if (!result.Attributes) {
+    throw new Error(`User Not Found with ${userId}`);
+  }
+
+  return result.Attributes as User;
 };
 
 // Todo: Get all users
-const getAllUsers = async function getUsers(
-  query: FilterQuery<User>,
-  sort: string,
-  skip: number,
-  limit: number
-): Promise<User[]> {
-  return await User.find(query).skip(skip).limit(limit).sort(sort).lean();
+const getAllUsers = async (
+  limit: number,
+  lastEvaluatedKey?: AWS.DynamoDB.DocumentClient.Key
+): Promise<{
+  users: User[];
+  lastEvaluatedKey?: AWS.DynamoDB.DocumentClient.Key;
+}> => {
+  const params = {
+    TableName: "Users",
+    Limit: limit,
+    ExclusiveStartKey: lastEvaluatedKey,
+  };
+
+  const result = await dynamoDB.scan(params).promise();
+  return {
+    users: result.Items as User[],
+    lastEvaluatedKey: result.LastEvaluatedKey,
+  };
 };
 
 // Todo: Get a single user
-const getSingleUser = async (id: string): Promise<User> => {
-  const user = await User.findById(id);
+const getSingleUser = async (userId: string): Promise<User> => {
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+  };
 
-  if (!user) {
-    throw new NotFoundError(`User Not Found with ${id}`);
-  }
-
-  return user;
-};
-
-// Todo: Update a user
-const updateUser = async (id: string, updateData: Partial<User>) => {
-  const options = { new: true, runValidators: true };
-  const updateUser = await User.findByIdAndUpdate(id, updateData, options);
-
-  if (!updateUser) {
-    throw new NotFoundError(`User Not Found with ${id}`);
-  }
-
-  return updateUser;
-};
-
-// Todo: Delete a user by admin
-const deleteUser = async (id: string) => {
-  const options = { new: true, runValidators: true };
-  const user = await User.findByIdAndDelete(id, options);
-
-  if (!user) {
-    throw new NotFoundError(`User Not Found with ${id}`);
-  }
-
-  return user;
-};
-
-// Todo: Ban or unban a user by admin
-const updateUserStatus = async (userId: string, status: string) => {
-  const options = { new: true, runValidators: true };
-  const user = await User.findByIdAndUpdate(userId, { status }, options);
-
-  if (!user) {
+  const result = await dynamoDB.get(params).promise();
+  if (!result.Item) {
     throw new NotFoundError(`User Not Found with ${userId}`);
   }
 
-  return user;
+  return result.Item as User;
+};
+
+// Todo: Update a user
+const updateUser = async (
+  userId: string,
+  updateData: Partial<User>
+): Promise<User> => {
+  const updateExpressions = [];
+  const expressionAttributeNames: { [key: string]: string } = {};
+  const expressionAttributeValues: { [key: string]: any } = {};
+
+  for (const key in updateData) {
+    updateExpressions.push(`#${key} = :${key}`);
+    expressionAttributeNames[`#${key}`] = key;
+    expressionAttributeValues[`:${key}`] = (updateData as any)[key];
+  }
+
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+    UpdateExpression: `set ${updateExpressions.join(", ")}`,
+    ExpressionAttributeNames: expressionAttributeNames,
+    ExpressionAttributeValues: expressionAttributeValues,
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await dynamoDB.update(params).promise();
+  if (!result.Attributes) {
+    throw new NotFoundError(`User Not Found with ${userId}`);
+  }
+
+  return result.Attributes as User;
+};
+
+// Todo: Update a user with reset token
+const updateUserWithResetToken = async (
+  userId: string,
+  resetToken: string,
+  resetTokenExpiresAt: string
+): Promise<User> => {
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+    UpdateExpression:
+      "set resetToken = :resetToken, resetTokenExpiresAt = :resetTokenExpiresAt",
+    ExpressionAttributeValues: {
+      ":resetToken": resetToken,
+      ":resetTokenExpiresAt": resetTokenExpiresAt,
+    },
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await dynamoDB.update(params).promise();
+  if (!result.Attributes) {
+    throw new NotFoundError(`User Not Found with ${userId}`);
+  }
+
+  return result.Attributes as User;
+};
+
+// Todo: Delete a user by admin
+const deleteUser = async (userId: string): Promise<void> => {
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+  };
+
+  const result = await dynamoDB.delete(params).promise();
+  if (!result.Attributes) {
+    throw new NotFoundError(`User Not Found with ${userId}`);
+  }
+};
+
+// Todo: Ban or unban a user by admin
+const updateUserStatus = async (
+  userId: string,
+  status: string
+): Promise<User> => {
+  const params = {
+    TableName: "Users",
+    Key: { userId },
+    UpdateExpression: "set #status = :status",
+    ExpressionAttributeNames: {
+      "#status": "status",
+    },
+    ExpressionAttributeValues: {
+      ":status": status,
+    },
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await dynamoDB.update(params).promise();
+  if (!result.Attributes) {
+    throw new NotFoundError(`User Not Found with ${userId}`);
+  }
+
+  return result.Attributes as User;
 };
 
 // Todo: Find or create user
-const findOrCreate = async (payload: Partial<User>) => {
-  const user = await User.findOne({ email: payload.email });
-  if (user) {
-    return user;
+const findOrCreate = async (payload: Partial<User>): Promise<User> => {
+  const existingUser = await getUserByEmail(payload.email!);
+  if (existingUser) {
+    return existingUser;
   } else {
-    const user = new User({
-      email: payload.email,
-      password: payload.password,
-      role: "user",
-    });
-    const createdUser = await user.save();
-    return createdUser;
+    const newUser: User = {
+      userId: uuidv4(),
+      username: payload.username!,
+      password: await bcrypt.hash(payload.password!, 10),
+      email: payload.email!,
+      role: Role.USER,
+      status: UserStatus.ACTIVE,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      orders: [],
+      cartItems: [],
+    };
+
+    const params = {
+      TableName: "Users",
+      Item: newUser,
+    };
+
+    await dynamoDB.put(params).promise();
+    return newUser;
   }
 };
 
@@ -190,4 +305,5 @@ export default {
   getUserByResetToken,
   updateUserStatus,
   findOrCreate,
+  updateUserWithResetToken,
 };

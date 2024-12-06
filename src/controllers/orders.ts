@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import ordersService from "../services/orders";
 import Order, { OrderDocument } from "../models/Order";
 import { BadRequestError } from "../errors/ApiError";
-import { UserDocument } from "../models/User";
 import { CartItem, Variant } from "../misc/types";
 import Product, { ProductDocument } from "../models/Product";
 import cartItemService from "../services/cartItems";
@@ -20,28 +19,24 @@ export async function createOrder(
   response: Response,
   next: NextFunction
 ) {
-  try {
-    const userInformation = request.user as UserDocument;
-    const { shipment, priceSum, orderItems, clientSecret } = request.body;
-
-    if (!shipment || !priceSum || !clientSecret || orderItems.length === 0) {
-      throw new BadRequestError(`Please provide order information!`);
-    }
-
-    const data = new Order({
-      userId: userInformation._id,
-      shipment,
-      priceSum,
-      clientSecret,
-      orderItems,
-    });
-
-    const newOrder = await ordersService.createOrder(data);
-
-    response.status(201).json({ newOrder });
-  } catch (error) {
-    next(error);
-  }
+  // try {
+  //   const userInformation = request.user as UserDocument;
+  //   const { shipment, priceSum, orderItems, clientSecret } = request.body;
+  //   if (!shipment || !priceSum || !clientSecret || orderItems.length === 0) {
+  //     throw new BadRequestError(`Please provide order information!`);
+  //   }
+  //   const data = new Order({
+  //     userId: userInformation._id,
+  //     shipment,
+  //     priceSum,
+  //     clientSecret,
+  //     orderItems,
+  //   });
+  //   const newOrder = await ordersService.createOrder(data);
+  //   response.status(201).json({ newOrder });
+  // } catch (error) {
+  //   next(error);
+  // }
 }
 
 // Todo: Get an order by id
@@ -50,22 +45,20 @@ export async function getOrderById(
   response: Response,
   next: NextFunction
 ) {
-  try {
-    const { orderId } = request.params;
-    const userInformation = request.user as UserDocument;
-
-    if (!orderId) {
-      throw new BadRequestError(`Please provide orderId!`);
-    }
-
-    const foundOrder = await ordersService.getOrderById(
-      orderId,
-      userInformation._id as string
-    );
-    response.status(200).json({ order: foundOrder });
-  } catch (error) {
-    next(error);
-  }
+  // try {
+  //   const { orderId } = request.params;
+  //   const userInformation = request.user as UserDocument;
+  //   if (!orderId) {
+  //     throw new BadRequestError(`Please provide orderId!`);
+  //   }
+  //   const foundOrder = await ordersService.getOrderById(
+  //     orderId,
+  //     userInformation._id as string
+  //   );
+  //   response.status(200).json({ order: foundOrder });
+  // } catch (error) {
+  //   next(error);
+  // }
 }
 
 // Todo: Get all orders of an user
@@ -74,24 +67,21 @@ export async function getAllOrdersByUserId(
   response: Response,
   next: NextFunction
 ) {
-  try {
-    const userInformation = request.user as UserDocument;
-    const page = Number(request.query.page) || 1;
-    const limit = Number(request.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const count = await Order.countDocuments({});
-
-    const orders = await ordersService.getAllOrdersByUserId(
-      userInformation._id as string,
-      skip,
-      limit
-    );
-
-    response.status(200).json({ orders, count });
-  } catch (error) {
-    next(error);
-  }
+  // try {
+  //   const userInformation = request.user as UserDocument;
+  //   const page = Number(request.query.page) || 1;
+  //   const limit = Number(request.query.limit) || 10;
+  //   const skip = (page - 1) * limit;
+  //   const count = await Order.countDocuments({});
+  //   const orders = await ordersService.getAllOrdersByUserId(
+  //     userInformation._id as string,
+  //     skip,
+  //     limit
+  //   );
+  //   response.status(200).json({ orders, count });
+  // } catch (error) {
+  //   next(error);
+  // }
 }
 
 // ------------ Admin ------------

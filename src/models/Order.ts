@@ -6,11 +6,11 @@ export type OrderDocument = Document & Order;
 
 export const OrderSchema = new Schema<OrderDocument>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    // userId: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
     shipment: {
       method: {
         type: String,

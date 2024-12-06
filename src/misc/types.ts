@@ -21,6 +21,7 @@ export type UserToRegister = {
   username: string;
   password: string;
   email: string;
+  role: Role | Role.USER;
 };
 
 export type User = UserToRegister & {
@@ -30,8 +31,8 @@ export type User = UserToRegister & {
   resetToken?: string | null;
   resetTokenExpiresAt?: string | null;
   shippingAddress?: ShippingAddress | null;
-  orders?: string[] | null;
-  cartItems?: string[] | null;
+  orders: string[] | null;
+  cartItems: string[] | null;
   createdAt?: string;
   updatedAt?: string;
 };
