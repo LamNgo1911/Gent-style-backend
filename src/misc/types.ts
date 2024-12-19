@@ -39,6 +39,7 @@ export type User = UserToRegister & {
 
 // --------- Category ---------
 export type Category = {
+  id: string;
   name: string;
   image: string;
 };

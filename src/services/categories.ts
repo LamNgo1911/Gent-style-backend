@@ -1,14 +1,32 @@
 import { NotFoundError } from "../errors/ApiError";
-import Category, { CategoryDocument } from "../models/Category";
+import { dynamoDB } from "../config/aws-dynamoDB";
+import { Category } from "../misc/types";
 
 // Todo: Get all categories
-const getAllCategories = async (): Promise<CategoryDocument[]> => {
-  return await Category.find();
+const getAllCategories = async (): Promise<Category[]> => {
+  const params = {
+    TableName: "Categories",
+  };
+
+  const result = await dynamoDB.scan(params).promise();
+
+  if (!result.Items) {
+    return [];
+  }
+
+  const categories = result.Items as Category[];
+  return categories;
 };
 
 // Todo: Get a single category
-const getSingleCategory = async (id: string): Promise<CategoryDocument> => {
-  const category = await Category.findById(id);
+const getSingleCategory = async (id: string): Promise<Category> => {
+  const params = {
+    TableName: "Categories",
+    Key: { id },
+  };
+
+  const result = await dynamoDB.get(params).promise();
+  const category = result.Item as Category;
 
   if (!category) {
     throw new NotFoundError(`Category Not Found with id ${id}.`);
@@ -18,41 +36,59 @@ const getSingleCategory = async (id: string): Promise<CategoryDocument> => {
 };
 
 // Todo: Create a new category by admin
-const createCategory = async (
-  category: CategoryDocument
-): Promise<CategoryDocument> => {
-  return await category.save();
+const createCategory = async (category: Category): Promise<Category> => {
+  const params = {
+    TableName: "Categories",
+    Item: category,
+  };
+
+  await dynamoDB.put(params).promise();
+  return category;
 };
 
 // Todo: Update a category by admin
 const updateCategory = async (
   id: string,
-  changedCategory: Partial<CategoryDocument>
+  changedCategory: Partial<Category>
 ) => {
-  const options = { new: true, runValidators: true };
+  const updateExpressions = [];
+  const expressionAttributeNames: { [key: string]: string } = {};
+  const expressionAttributeValues: { [key: string]: any } = {};
 
-  const updatedCategory = await Category.findByIdAndUpdate(
-    id,
-    changedCategory,
-    options
-  );
-
-  if (!updatedCategory) {
-    throw new NotFoundError(`Category No Found with category id ${id}`);
+  for (const key in changedCategory) {
+    updateExpressions.push(`#${key} = :${key}`);
+    expressionAttributeNames[`#${key}`] = key;
+    expressionAttributeValues[`:${key}`] = (changedCategory as any)[key];
   }
 
-  return updatedCategory;
+  const params = {
+    TableName: "Categories",
+    Key: { id },
+    UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+    ExpressionAttributeNames: expressionAttributeNames,
+    ExpressionAttributeValues: expressionAttributeValues,
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await dynamoDB.update(params).promise();
+  if (!result.Attributes) {
+    throw new NotFoundError(`Category Not Found with id ${id}.`);
+  }
+
+  return result.Attributes as Category;
 };
 
 // Todo: Delete a category by admin
 const deleteCategory = async (id: string) => {
-  const category = await Category.findByIdAndDelete(id);
+  const params = {
+    TableName: "Categories",
+    Key: { id },
+  };
 
-  if (category) {
-    return category;
+  const result = await dynamoDB.delete(params).promise();
+  if (!result) {
+    throw new NotFoundError(`Category Not Found with id ${id}.`);
   }
-
-  throw new NotFoundError(`Category Not Found with id ${id}.`);
 };
 
 export default {

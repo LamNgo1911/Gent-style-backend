@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 
 import categoryService from "../services/categories";
 import { BadRequestError } from "../errors/ApiError";
-import Category from "../models/Category";
 import { uploadImages } from "../utils/imageUpload";
 
 // Todo: Get all categories
@@ -49,6 +49,7 @@ export async function createCategory(
 ) {
   try {
     const { name } = request.body;
+    const id = uuidv4();
     const file = request.file;
 
     if (!name || !file) {
@@ -58,10 +59,11 @@ export async function createCategory(
     // Upload the image to Cloudinary
     const uploadedImages = await uploadImages([file]);
 
-    const category = new Category({
+    const category = {
+      id,
       name,
       image: uploadedImages[0],
-    });
+    };
 
     const newCategory = await categoryService.createCategory(category);
     response.status(201).json({ newCategory });
