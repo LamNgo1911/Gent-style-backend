@@ -5,7 +5,6 @@ import Product from "../models/Product";
 import productsService from "../services/products";
 import { ProductDocument } from "../models/Product";
 import { BadRequestError } from "../errors/ApiError";
-import Category from "../models/Category";
 import { uploadImages } from "../utils/imageUpload";
 
 // Todo: Get all products
@@ -37,10 +36,10 @@ export async function getAllProducts(
 
     // Todo: Filter products by category
     if (category && category !== "All") {
-      const cate = await Category.findOne({ name: category });
-      if (cate) {
-        query.category = cate._id;
-      }
+      // const cate = await Category.findOne({ name: category });
+      // if (cate) {
+      //   query.category = cate._id;
+      // }
     }
 
     // Todo:  Filter products by price
@@ -124,11 +123,11 @@ export async function createProduct(
     ) {
       throw new BadRequestError("Please fill out all fields!");
     }
-    const checkedCategory = await Category.findOne({ _id: category });
+    // const checkedCategory = await Category.findOne({ _id: category });
 
-    if (!checkedCategory) {
-      throw new BadRequestError("Category Not Found");
-    }
+    // if (!checkedCategory) {
+    //   throw new BadRequestError("Category Not Found");
+    // }
     const uploadedImages = await uploadImages(files);
 
     const productData = new Product({

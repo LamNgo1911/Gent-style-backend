@@ -13,7 +13,8 @@ import adminCheck from "../middlewares/adminCheck";
 import multer from "multer";
 
 const router = express.Router();
-const upload = multer({ dest: "src/uploads" });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // ------------ User ------------
 
@@ -22,15 +23,15 @@ router.get("/", getAllCategories);
 
 // Todo: Get a single category
 router.get("/:id", getSingleCategory);
-
+4;
 // ------------ Admin ------------
 
 // Todo: Create a new category by admin
 router.post(
   "/",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  adminCheck,
+  // passport.authenticate("jwt", { session: false }),
+  // userStatusCheck,
+  // adminCheck,
   upload.single("image"),
   createCategory
 );
@@ -38,18 +39,18 @@ router.post(
 // Todo: Update a category by admin
 router.put(
   "/:id",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  adminCheck,
+  // passport.authenticate("jwt", { session: false }),
+  // userStatusCheck,
+  // adminCheck,
   updateCategory
 );
 
 // Todo: Delete a category by admin
 router.delete(
   "/:id",
-  passport.authenticate("jwt", { session: false }),
-  userStatusCheck,
-  adminCheck,
+  // passport.authenticate("jwt", { session: false }),
+  // userStatusCheck,
+  // adminCheck,
   deleteCategory
 );
 
