@@ -1,6 +1,7 @@
 import { NotFoundError } from "../errors/ApiError";
 import { dynamoDB } from "../config/aws-dynamoDB";
 import { Category } from "../misc/types";
+import { deleteImage } from "../utils/imageDelete";
 
 // Todo: Get all categories
 const getAllCategories = async (): Promise<Category[]> => {
@@ -80,12 +81,23 @@ const updateCategory = async (
 
 // Todo: Delete a category by admin
 const deleteCategory = async (id: string) => {
+  const category = await getSingleCategory(id);
+  console.log(category, id);
+  if (!category) {
+    throw new NotFoundError(`Category not found with id ${id}`);
+  }
+
   const params = {
     TableName: "Categories",
     Key: { id },
   };
 
   const result = await dynamoDB.delete(params).promise();
+
+  if (category.image) {
+    await deleteImage(category.image);
+  }
+
   if (!result) {
     throw new NotFoundError(`Category Not Found with id ${id}.`);
   }
